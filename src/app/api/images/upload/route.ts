@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
 
     // Convert File to Buffer for Lighthouse SDK
     const arrayBuffer = await file.arrayBuffer();
-    let buffer = Buffer.from(arrayBuffer);
+    const buffer = Buffer.from(arrayBuffer);
 
     // Handle iOS HEIC/HEIF images by converting to JPEG
     if (IOS_IMAGE_TYPES.includes(file.type)) {
