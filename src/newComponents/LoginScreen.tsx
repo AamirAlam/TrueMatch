@@ -18,6 +18,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     VerificationLevel.Orb
   );
   const [miniKitReady, setMiniKitReady] = useState(false);
+  const [directMiniKitInstalled, setDirectMiniKitInstalled] = useState(false);
 
   const { isInstalled } = useMiniKit();
   const { data: session } = useSession();
@@ -58,6 +59,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           console.log('🏁 Final MiniKit.isInstalled() =', finalStatus);
           console.log('🎯 Setting miniKitReady to true');
           setMiniKitReady(true);
+          setDirectMiniKitInstalled(finalStatus);
         }, 500);
       } catch (error) {
         console.error('❌ Failed to initialize MiniKit:', error);
@@ -74,19 +76,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     initializeMiniKit();
   }, []);
 
-  // Combined installation check with logging
-  const isMiniKitInstalled = isInstalled && miniKitReady;
+  // Combined installation check with fallback logic
+  // Use direct MiniKit API if hook fails but MiniKit is actually installed
+  const isMiniKitInstalled = (isInstalled || directMiniKitInstalled) && miniKitReady;
   
   // Log status changes
   useEffect(() => {
     console.log('📊 LoginScreen status update:', {
       isInstalled,
+      directMiniKitInstalled,
       miniKitReady,
       isMiniKitInstalled,
       buttonState,
       timestamp: new Date().toISOString()
     });
-  }, [isInstalled, miniKitReady, isMiniKitInstalled, buttonState]);
+  }, [isInstalled, directMiniKitInstalled, miniKitReady, isMiniKitInstalled, buttonState]);
 
   const onClickVerify = async (verificationLevel: VerificationLevel) => {
     console.log('🚀 Starting verification process...');
@@ -256,14 +260,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             </Button>
           </LiveFeedback>
 
-          {miniKitReady && !isInstalled && (
+          {miniKitReady && !isMiniKitInstalled && (
             <div className="text-center p-4 bg-yellow-50 rounded-2xl border border-yellow-200">
               <p className="text-sm text-yellow-800">
                 World App is not installed. Please install World App to
                 continue.
               </p>
               <p className="text-xs text-yellow-600 mt-2">
-                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}
+                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}, directInstalled={String(directMiniKitInstalled)}
               </p>
             </div>
           )}
@@ -274,7 +278,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 Initializing World ID...
               </p>
               <p className="text-xs text-blue-600 mt-2">
-                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}
+                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}, directInstalled={String(directMiniKitInstalled)}
               </p>
             </div>
           )}
@@ -282,7 +286,10 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           {/* Debug info always visible */}
           <div className="text-center p-2 bg-gray-50 rounded-xl border border-gray-200 mt-2">
             <p className="text-xs text-gray-600">
-              Debug Status: miniKitReady={String(miniKitReady)} | isInstalled={String(isInstalled)} | isMiniKitInstalled={String(isMiniKitInstalled)}
+              Hook: isInstalled={String(isInstalled)} | Direct: directInstalled={String(directMiniKitInstalled)}
+            </p>
+            <p className="text-xs text-gray-600">
+              Final: miniKitReady={String(miniKitReady)} | isMiniKitInstalled={String(isMiniKitInstalled)}
             </p>
             <p className="text-xs text-gray-600">
               UserAgent: {navigator.userAgent.includes('WorldApp') ? 'WorldApp detected' : 'Not WorldApp'}
