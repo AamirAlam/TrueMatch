@@ -7,9 +7,8 @@ import Navigation from "./newComponents/Navigation";
 import WelcomeScreen from "./newComponents/WelcomeScreen";
 import LoginScreen from "./newComponents/LoginScreen";
 import ProfileFormScreen from "./newComponents/ProfileFormScreen";
-import ConversationTest from "./newComponents/ConversationTest";
 
-type TabType = "home" | "chat" | "profile" | "test";
+type TabType = "home" | "chat" | "profile";
 type AppState = "welcome" | "login" | "profile-form" | "main-app";
 
 function App() {
@@ -43,8 +42,6 @@ function App() {
             return <ChatList onChatSelect={() => {}} />;
           case "profile":
             return <Profile />;
-          case "test":
-            return <ConversationTest />;
           default:
             return <SwipeCards />;
         }

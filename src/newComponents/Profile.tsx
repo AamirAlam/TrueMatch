@@ -289,7 +289,7 @@ const Profile: React.FC = () => {
                 <p className="text-gray-500 text-sm">No photos added yet</p>
               </div>
             )}
-            {profile.photos && profile.photos.length < 6 && (
+            {profile.photos && profile.photos.length < 4 && (
               <div className="w-full h-24 border-2 border-dashed border-gray-300 rounded-xl flex items-center justify-center hover:border-rose-400 transition-colors cursor-pointer group">
                 <Camera className="w-6 h-6 text-gray-400 group-hover:text-rose-500" />
               </div>

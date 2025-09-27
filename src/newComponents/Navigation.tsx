@@ -1,7 +1,7 @@
 import React from "react";
-import { Home, MessageCircle, User, TestTube } from "lucide-react";
+import { Home, MessageCircle, User } from "lucide-react";
 
-type TabType = "home" | "chat" | "profile" | "test";
+type TabType = "home" | "chat" | "profile";
 
 interface NavigationProps {
   activeTab: TabType;
@@ -13,7 +13,6 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
     { id: "home", icon: Home },
     { id: "chat", icon: MessageCircle },
     { id: "profile", icon: User },
-    { id: "test", icon: TestTube },
   ] as const;
 
   return (

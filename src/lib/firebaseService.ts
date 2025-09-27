@@ -489,13 +489,33 @@ class FirebaseService {
     );
 
     return onSnapshot(q, (querySnapshot) => {
-      const conversations = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        lastMessageTime: doc.data().lastMessageTime?.toDate() || new Date(),
-        createdAt: doc.data().createdAt?.toDate() || new Date(),
-        updatedAt: doc.data().updatedAt?.toDate() || new Date(),
-      })) as Conversation[];
+      const conversations = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+
+        // Convert unreadCount from Timestamps to numbers
+        const unreadCount: Record<string, number> = {};
+        if (data.unreadCount) {
+          Object.keys(data.unreadCount).forEach((userId) => {
+            const value = data.unreadCount[userId];
+            // If it's a Timestamp, convert to number, otherwise use as-is
+            unreadCount[userId] =
+              value && typeof value === "object" && "toDate" in value
+                ? 1 // If it's a Timestamp, treat as 1 unread message
+                : typeof value === "number"
+                ? value
+                : 0;
+          });
+        }
+
+        return {
+          id: doc.id,
+          ...data,
+          lastMessageTime: data.lastMessageTime?.toDate() || new Date(),
+          createdAt: data.createdAt?.toDate() || new Date(),
+          updatedAt: data.updatedAt?.toDate() || new Date(),
+          unreadCount,
+        };
+      }) as Conversation[];
 
       // Sort by lastMessageTime in JavaScript since we can't use orderBy with array-contains
       const sortedConversations = conversations.sort(

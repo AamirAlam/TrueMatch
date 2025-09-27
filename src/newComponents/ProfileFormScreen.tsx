@@ -86,22 +86,45 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   };
 
   const addPhoto = () => {
-    // Simulate photo upload
-    const photoUrls = [
-      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
-      "https://images.pexels.com/photos/1181519/pexels-photo-1181519.jpeg",
-      "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg",
-      "https://images.pexels.com/photos/1542085/pexels-photo-1542085.jpeg",
-    ];
-
-    if (profileData.photos.length < 6) {
-      const randomPhoto =
-        photoUrls[Math.floor(Math.random() * photoUrls.length)];
-      setProfileData((prev) => ({
-        ...prev,
-        photos: [...prev.photos, randomPhoto],
-      }));
+    if (profileData.photos.length >= 4) {
+      setError("You can upload a maximum of 4 photos");
+      return;
     }
+
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.multiple = false;
+
+    input.onchange = (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (file) {
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setError("Photo size must be less than 5MB");
+          return;
+        }
+
+        // Validate file type
+        if (!file.type.startsWith("image/")) {
+          setError("Please select a valid image file");
+          return;
+        }
+
+        // Convert to base64 for now (in production, upload to cloud storage)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const result = e.target?.result as string;
+          setProfileData((prev) => ({
+            ...prev,
+            photos: [...prev.photos, result],
+          }));
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
+    input.click();
   };
 
   const removePhoto = (index: number) => {
@@ -128,8 +151,8 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   const validateCurrentStep = () => {
     switch (currentStep) {
       case 1: // Photos step (was case 2)
-        if (profileData.photos.length < 2) {
-          setError("Please add at least 2 photos");
+        if (profileData.photos.length < 1) {
+          setError("Please add at least 1 photo");
           return false;
         }
         break;
@@ -242,7 +265,10 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
                 Add Your Photos
               </h2>
               <p className="text-gray-600">
-                Upload at least 2 photos to get started
+                Upload 1-4 photos to showcase yourself
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                {profileData.photos.length}/4 photos uploaded
               </p>
             </div>
 
@@ -263,7 +289,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
                     </button>
                   </div>
                 ))}
-                {profileData.photos.length < 6 && (
+                {profileData.photos.length < 4 && (
                   <div
                     onClick={addPhoto}
                     className="w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center cursor-pointer hover:border-purple-500 transition-colors group"

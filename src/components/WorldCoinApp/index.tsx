@@ -4,18 +4,17 @@ import { useSession } from "next-auth/react";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import Header from "../../newComponents/Header";
 import SwipeCards from "../../newComponents/SwipeCards";
-import ChatList from "../../newComponents/ChatList";
+import ChatListWrapper from "../../newComponents/ChatListWrapper";
 import Profile from "../../newComponents/Profile";
 import Navigation from "../../newComponents/Navigation";
 import WelcomeScreen from "../../newComponents/WelcomeScreen";
 import LoginScreen from "../../newComponents/LoginScreen";
 import ProfileFormScreen from "../../newComponents/ProfileFormScreen";
 import TestSessionInfo from "../TestSessionInfo";
-import ConversationTest from "../../newComponents/ConversationTest";
 import ChatRoom from "../../newComponents/ChatRoom";
 import { UserProfile } from "../../lib/firebaseService";
 
-type TabType = "home" | "chat" | "profile" | "test";
+type TabType = "home" | "chat" | "profile";
 type AppState = "welcome" | "login" | "profile-form" | "main-app";
 
 function WorldCoinApp() {
@@ -261,11 +260,9 @@ function WorldCoinApp() {
           case "home":
             return <SwipeCards />;
           case "chat":
-            return <ChatList onChatSelect={handleChatSelect} />;
+            return <ChatListWrapper onChatSelect={handleChatSelect} />;
           case "profile":
             return <Profile />;
-          case "test":
-            return <ConversationTest />;
           default:
             return <SwipeCards />;
         }
@@ -283,11 +280,7 @@ function WorldCoinApp() {
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300">
       <TestSessionInfo />
       {appState === "main-app" && !isInChatRoom && <Header />}
-      <main
-        className={
-          appState === "main-app" && !isInChatRoom ? "pb-20 pt-16" : ""
-        }
-      >
+      <main className={appState === "main-app" && !isInChatRoom ? "pb-20" : ""}>
         {renderContent()}
       </main>
       {appState === "main-app" && !isInChatRoom && (

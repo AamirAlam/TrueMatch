@@ -40,84 +40,108 @@ const ChatList: React.FC<ChatListProps> = ({ onChatSelect }) => {
       return;
     }
 
-    const unsubscribe = firebaseService.subscribeToUserConversations(
-      currentUserId,
-      async (conversationsData) => {
-        try {
-          // Get other user profiles for each conversation
-          const conversationsWithProfiles = await Promise.all(
-            conversationsData.map(async (conversation) => {
-              const otherUserId = conversation.participants.find(
-                (id) => id !== currentUserId
-              );
-              if (!otherUserId) return null;
+    try {
+      const unsubscribe = firebaseService.subscribeToUserConversations(
+        currentUserId,
+        async (conversationsData) => {
+          try {
+            // Get other user profiles for each conversation
+            const conversationsWithProfiles = await Promise.all(
+              conversationsData.map(async (conversation) => {
+                try {
+                  const otherUserId = conversation.participants.find(
+                    (id) => id !== currentUserId
+                  );
+                  if (!otherUserId) return null;
 
-              // Check if users are matched before showing conversation
-              const areMatched = await firebaseService.areUsersMatched(
-                currentUserId,
-                otherUserId
-              );
+                  // Check if users are matched before showing conversation
+                  const areMatched = await firebaseService.areUsersMatched(
+                    currentUserId,
+                    otherUserId
+                  );
 
-              if (!areMatched) return null; // Only show matched users
+                  if (!areMatched) return null; // Only show matched users
 
-              // Get profile by nullifier_hash
-              const otherUserProfile =
-                await firebaseService.getUserProfileByNullifierHash(
-                  otherUserId
-                );
+                  // Get profile by nullifier_hash
+                  const otherUserProfile =
+                    await firebaseService.getUserProfileByNullifierHash(
+                      otherUserId
+                    );
 
-              // If no profile found, create a basic one
-              if (!otherUserProfile) {
-                return {
-                  ...conversation,
-                  otherUserProfile: {
-                    email: `${otherUserId}@truematch.app`,
-                    nullifierHash: otherUserId,
-                    username: "Unknown User",
-                    profilePictureUrl:
-                      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
-                    name: "Unknown User",
-                    age: "",
-                    bio: "",
-                    location: "",
-                    interests: [],
-                    photos: [],
-                    lookingFor: "",
-                    education: "",
-                    occupation: "",
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                  },
-                  otherUserId,
-                };
-              }
+                  // If no profile found, create a basic one
+                  if (!otherUserProfile) {
+                    return {
+                      ...conversation,
+                      otherUserProfile: {
+                        email: `${otherUserId}@truematch.app`,
+                        nullifierHash: otherUserId,
+                        username: "Unknown User",
+                        profilePictureUrl:
+                          "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+                        name: "Unknown User",
+                        age: "",
+                        bio: "",
+                        location: "",
+                        interests: [],
+                        photos: [],
+                        lookingFor: "",
+                        education: "",
+                        occupation: "",
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                      },
+                      otherUserId,
+                    };
+                  }
 
-              return {
-                ...conversation,
-                otherUserProfile,
-                otherUserId,
-              };
-            })
-          );
+                  return {
+                    ...conversation,
+                    otherUserProfile,
+                    otherUserId,
+                  };
+                } catch (conversationError) {
+                  console.error(
+                    "Error processing conversation:",
+                    conversationError
+                  );
+                  return null;
+                }
+              })
+            );
 
-          setConversations(
-            conversationsWithProfiles.filter(Boolean) as ChatItemWithProfile[]
-          );
-          setIsLoading(false);
-        } catch (err) {
-          console.error("Error loading conversations:", err);
-          setError("Failed to load conversations");
-          setIsLoading(false);
+            const validConversations = conversationsWithProfiles.filter(
+              Boolean
+            ) as ChatItemWithProfile[];
+
+            setConversations(validConversations);
+            setIsLoading(false);
+          } catch (err) {
+            console.error("Error loading conversations:", err);
+            setError("Failed to load conversations");
+            setIsLoading(false);
+          }
         }
-      }
-    );
+      );
 
-    return () => unsubscribe();
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error setting up conversation listener:", error);
+      setError("Failed to set up conversation listener");
+      setIsLoading(false);
+    }
   }, [isAuthenticated, session]);
 
-  const formatTime = (timestamp: Date) => {
+  const formatTime = (timestamp: Date | null | undefined) => {
+    if (!timestamp) return "now";
+
+    // Ensure we have a valid Date object
+    const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+
+    // Check if the date is valid
+    if (isNaN(date.getTime())) return "now";
+
     const now = new Date();
-    const diff = now.getTime() - timestamp.getTime();
+    const diff = now.getTime() - date.getTime();
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
@@ -126,7 +150,7 @@ const ChatList: React.FC<ChatListProps> = ({ onChatSelect }) => {
     if (minutes < 60) return `${minutes}m`;
     if (hours < 24) return `${hours}h`;
     if (days < 7) return `${days}d`;
-    return timestamp.toLocaleDateString();
+    return date.toLocaleDateString();
   };
 
   const filteredConversations = conversations.filter((conversation) =>
@@ -222,7 +246,9 @@ const ChatList: React.FC<ChatListProps> = ({ onChatSelect }) => {
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 truncate">
-                    {conversation.lastMessage?.content || "No messages yet"}
+                    {typeof conversation.lastMessage?.content === "string"
+                      ? conversation.lastMessage.content
+                      : "No messages yet"}
                   </p>
                 </div>
 
