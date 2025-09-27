@@ -1,15 +1,31 @@
-import React from 'react';
-import { Heart, MapPin } from 'lucide-react';
+import React from "react";
+import { Heart, MapPin } from "lucide-react";
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
   onSkipToHome: () => void;
 }
 
-const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted, onSkipToHome }) => {
+const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
+  onGetStarted,
+  onSkipToHome,
+}) => {
+  const isDevMode = process.env.NEXT_PUBLIC_SKIP_WORLDCOIN_LOGIN === "true";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300 flex items-center justify-center p-4">
       <div className="max-w-sm w-full bg-white rounded-3xl p-8 shadow-2xl">
+        {/* Skip to Home Button */}
+        {isDevMode && (
+          <div className="mb-4 flex justify-end">
+            <button
+              onClick={onSkipToHome}
+              className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded-full border border-gray-300 transition-all duration-200"
+            >
+              Skip to Home
+            </button>
+          </div>
+        )}
         {/* Geometric Pattern with Profile Images */}
         <div className="relative h-80 mb-8">
           {/* Central hexagon with couple */}
@@ -89,7 +105,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted, onSkipToHom
             Let&apos;s meet new folks in your neighborhood
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
-            Step into your local community and connect with people who live nearby.
+            Step into your local community and connect with people who live
+            nearby.
           </p>
 
           {/* Get Started Button */}
@@ -100,17 +117,9 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted, onSkipToHom
             Get Started
           </button>
 
-          {/* Skip Button for Testing */}
-          <button
-            onClick={onSkipToHome}
-            className="w-full mt-3 bg-gray-200 text-gray-700 py-3 rounded-2xl font-medium text-sm hover:bg-gray-300 transition-all duration-200"
-          >
-            Skip to Home (Testing)
-          </button>
-
           {/* Sign Up Link */}
           <p className="text-gray-500 text-sm mt-4">
-            Already have an account?{' '}
+            Already have an account?{" "}
             <button className="text-purple-600 font-medium hover:text-purple-700">
               Sign Up
             </button>
