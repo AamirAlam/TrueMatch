@@ -155,11 +155,17 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
 
       setError(null);
 
-      // Store file locally for later upload
-      setProfileData((prev) => ({
-        ...prev,
-        pendingFiles: [...prev.pendingFiles, processedFile]
-      }));
+      // Create preview URL and store file for later upload
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setProfileData((prev) => ({
+          ...prev,
+          photos: [...prev.photos, result],
+          pendingFiles: [...prev.pendingFiles, processedFile]
+        }));
+      };
+      reader.readAsDataURL(processedFile);
     };
 
     input.click();
