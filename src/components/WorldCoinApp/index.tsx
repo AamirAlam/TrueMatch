@@ -47,7 +47,7 @@ function WorldCoinApp() {
     walletAddress: "0x1234567890123456789012345678901234567890",
     username: "Test User",
     profilePictureUrl:
-      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+      "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg",
   };
 
   const handleChatSelect = (

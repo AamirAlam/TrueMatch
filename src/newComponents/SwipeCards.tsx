@@ -254,7 +254,7 @@ const SwipeCards: React.FC = () => {
           <img
             src={
               currentUser.profilePictureUrl ||
-              "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+              "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
             }
             alt={currentUser.name}
             className="w-full h-96 object-cover"
@@ -379,7 +379,7 @@ const SwipeCards: React.FC = () => {
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-3">
           <img
-            src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+            src="https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
             alt="User"
             className="w-10 h-10 rounded-full object-cover"
           />
@@ -438,7 +438,7 @@ const SwipeCards: React.FC = () => {
             <img
               src={
                 currentUser.profilePictureUrl ||
-                "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
               }
               alt={currentUser.name}
               className="w-full h-full object-cover"

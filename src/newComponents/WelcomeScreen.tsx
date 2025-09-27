@@ -34,7 +34,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             <div className="w-32 h-32 bg-gradient-to-br from-pink-400 to-purple-500 rounded-3xl p-1">
               <div className="w-full h-full rounded-3xl overflow-hidden">
                 <img
-                  src="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                  src="https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
                   alt="Couple"
                   className="w-full h-full object-cover"
                 />

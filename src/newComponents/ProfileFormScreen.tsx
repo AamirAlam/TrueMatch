@@ -45,7 +45,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     walletAddress: "0x1234567890123456789012345678901234567890",
     username: "Tahir",
     profilePictureUrl:
-      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+      "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg",
     email: "tahir@sayy.ai",
   };
   const [profileData, setProfileData] = useState({

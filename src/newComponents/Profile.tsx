@@ -150,7 +150,7 @@ const Profile: React.FC = () => {
             <img
               src={
                 profile.profilePictureUrl ||
-                "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
               }
               alt="Profile"
               className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
