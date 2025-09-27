@@ -43,15 +43,46 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
   try {
+    // Log request details for iPhone debugging
+    const userAgent = request.headers.get('user-agent') || '';
+    const contentType = request.headers.get('content-type') || '';
+    const contentLength = request.headers.get('content-length') || '';
+    
+    console.log('Request debug info:', {
+      userAgent,
+      contentType,
+      contentLength,
+      isIOS: /iPad|iPhone|iPod/.test(userAgent),
+      isSafari: /Safari/.test(userAgent) && !/Chrome/.test(userAgent)
+    });
+
     const formData = await request.formData();
+    console.log('FormData entries:', Array.from(formData.entries()).map(([key, value]) => ({
+      key,
+      valueType: typeof value,
+      isFile: value instanceof File,
+      fileName: value instanceof File ? value.name : 'N/A',
+      fileSize: value instanceof File ? value.size : 'N/A',
+      fileType: value instanceof File ? value.type : 'N/A'
+    })));
+
     const file = formData.get('file') as File;
 
     if (!file) {
+      console.error('No file found in FormData');
       return NextResponse.json(
         { error: 'No file provided' },
         { status: 400 }
       );
     }
+
+    console.log('File received on server:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      lastModified: file.lastModified,
+      constructor: file.constructor.name
+    });
 
     // Validate file type
     if (!SUPPORTED_IMAGE_TYPES.includes(file.type)) {
@@ -89,9 +120,34 @@ export async function POST(request: NextRequest) {
       apiKeyLength: LIGHTHOUSE_API_KEY.length
     });
 
-    // Convert File to Buffer for Lighthouse SDK
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Convert File to Buffer for Lighthouse SDK with iPhone-specific handling
+    let buffer: Buffer;
+    try {
+      console.log('Attempting to read file as ArrayBuffer...');
+      const arrayBuffer = await file.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      console.log('ArrayBuffer conversion successful, buffer size:', buffer.length);
+    } catch (arrayBufferError) {
+      console.error('ArrayBuffer conversion failed, trying alternative method:', arrayBufferError);
+      
+      // Alternative method for iPhone Safari issues
+      try {
+        console.log('Trying FileReader approach...');
+        const fileReader = new Promise<ArrayBuffer>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as ArrayBuffer);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsArrayBuffer(file);
+        });
+        
+        const arrayBuffer = await fileReader;
+        buffer = Buffer.from(arrayBuffer);
+        console.log('FileReader conversion successful, buffer size:', buffer.length);
+      } catch (fileReaderError) {
+        console.error('FileReader conversion also failed:', fileReaderError);
+        throw new Error('Failed to read file data on iPhone');
+      }
+    }
 
     // Handle iOS HEIC/HEIF images by converting to JPEG
     let finalFileName = randomFileName;
@@ -186,5 +242,17 @@ export async function GET() {
     methods: ['POST'],
     supportedTypes: SUPPORTED_IMAGE_TYPES,
     maxSize: `${MAX_FILE_SIZE / (1024 * 1024)}MB`
+  });
+}
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
   });
 }
