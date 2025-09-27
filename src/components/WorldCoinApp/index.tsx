@@ -278,7 +278,7 @@ function WorldCoinApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300">
-      <TestSessionInfo />
+      {/* <TestSessionInfo /> */}
       {appState === "main-app" && !isInChatRoom && <Header />}
       <main className={appState === "main-app" && !isInChatRoom ? "pb-20" : ""}>
         {renderContent()}

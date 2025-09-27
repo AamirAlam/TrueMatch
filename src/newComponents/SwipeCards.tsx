@@ -269,11 +269,12 @@ const SwipeCards: React.FC = () => {
             <ArrowLeft className="w-5 h-5 text-white" />
           </button>
 
-          {/* Distance */}
-          <div className="absolute top-4 right-4 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
-            <span className="text-white text-sm font-medium">
-              {currentUser.distance}
-            </span>
+          {/* Online Status */}
+          <div className="absolute top-4 right-4 bg-green-500/90 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+              <span className="text-white text-sm font-semibold">Online</span>
+            </div>
           </div>
 
           {/* Match Percentage */}
@@ -387,12 +388,6 @@ const SwipeCards: React.FC = () => {
             <p className="font-semibold text-gray-900">EthGlobal, New Delhi</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-sm text-gray-500">Profiles left</p>
-          <p className="font-semibold text-gray-900">
-            {users.length - currentCardIndex} of {users.length}
-          </p>
-        </div>
       </div>
 
       {/* Main Card */}
@@ -450,11 +445,12 @@ const SwipeCards: React.FC = () => {
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-            {/* Distance Badge */}
-            <div className="absolute top-4 left-4 bg-black/20 backdrop-blur-sm rounded-full px-3 py-1">
-              <span className="text-white text-sm font-medium">
-                {currentUser.distance}
-              </span>
+            {/* Online Status Badge */}
+            <div className="absolute top-4 left-4 bg-black/30 backdrop-blur-sm rounded-full px-3 py-1.5 shadow-lg">
+              <div className="flex items-center space-x-1.5">
+                <div className="w-2 h-2 bg-green-500/90 rounded-full animate-pulse"></div>
+                <span className="text-white text-sm ">Online</span>
+              </div>
             </div>
 
             {/* Name and Location */}

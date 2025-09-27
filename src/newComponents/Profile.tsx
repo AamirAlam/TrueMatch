@@ -145,31 +145,33 @@ const Profile: React.FC = () => {
 
       {/* Profile Header */}
       <div className="px-4 mb-6">
-        <div className="relative inline-block">
-          <img
-            src={
-              profile.profilePictureUrl ||
-              "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
-            }
-            alt="Profile"
-            className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
-          />
-          <button className="absolute bottom-2 right-2 w-10 h-10 bg-gradient-to-r from-rose-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
-            <Camera className="w-5 h-5 text-white" />
-          </button>
-        </div>
+        <div className="flex flex-col items-center justify-center">
+          <div className="relative inline-block">
+            <img
+              src={
+                profile.profilePictureUrl ||
+                "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+              }
+              alt="Profile"
+              className="w-32 h-32 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
+            />
+            <button className="absolute bottom-2 right-2 w-10 h-10 bg-gradient-to-r from-rose-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+              <Camera className="w-5 h-5 text-white" />
+            </button>
+          </div>
 
-        <div className="text-center mt-4">
-          <h1 className="text-2xl font-bold text-gray-900 mb-1">
-            {profile.name || "User"}
-          </h1>
-          <p className="text-gray-600 mb-2">
-            {profile.age ? `${profile.age} • ` : ""}
-            {profile.location || "Location not set"}
-          </p>
-          <div className="flex items-center justify-center space-x-1">
-            <Star className="w-4 h-4 text-blue-500" />
-            <span className="text-sm text-gray-600">Verified Profile</span>
+          <div className="text-center mt-4">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
+              {profile.name || "User"}
+            </h1>
+            <p className="text-gray-600 mb-2">
+              {profile.age ? `${profile.age} • ` : ""}
+              {profile.location || "Location not set"}
+            </p>
+            <div className="flex items-center justify-center space-x-1">
+              <Star className="w-4 h-4 text-blue-500" />
+              <span className="text-sm text-gray-600">Verified Profile</span>
+            </div>
           </div>
         </div>
       </div>
