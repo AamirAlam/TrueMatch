@@ -26,18 +26,46 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   // Ensure MiniKit is properly installed and ready
   useEffect(() => {
     const initializeMiniKit = async () => {
+      console.log('🔄 LoginScreen: Starting MiniKit initialization...');
+      console.log('🌍 Environment check:', {
+        userAgent: navigator.userAgent,
+        isWorldApp: navigator.userAgent.includes('WorldApp'),
+        location: window.location.href,
+        timestamp: new Date().toISOString()
+      });
+      
       try {
+        console.log('🔍 Checking MiniKit installation status...');
+        const isAlreadyInstalled = MiniKit.isInstalled();
+        console.log('📱 MiniKit.isInstalled() =', isAlreadyInstalled);
+        
         // Install MiniKit if not already done
-        if (!MiniKit.isInstalled()) {
+        if (!isAlreadyInstalled) {
+          console.log('⚙️ Installing MiniKit...');
           await MiniKit.install();
+          console.log('✅ MiniKit installation completed');
+        } else {
+          console.log('✅ MiniKit already installed');
         }
+        
+        // Check status after potential installation
+        const postInstallStatus = MiniKit.isInstalled();
+        console.log('📊 Post-install MiniKit.isInstalled() =', postInstallStatus);
         
         // Wait a bit for installation to complete
         setTimeout(() => {
+          const finalStatus = MiniKit.isInstalled();
+          console.log('🏁 Final MiniKit.isInstalled() =', finalStatus);
+          console.log('🎯 Setting miniKitReady to true');
           setMiniKitReady(true);
         }, 500);
       } catch (error) {
-        console.error('Failed to initialize MiniKit:', error);
+        console.error('❌ Failed to initialize MiniKit:', error);
+        console.error('📋 Error details:', {
+          name: error instanceof Error ? error.name : 'Unknown',
+          message: error instanceof Error ? error.message : String(error),
+          stack: error instanceof Error ? error.stack : undefined
+        });
         // Still set ready to true to show the error message
         setMiniKitReady(true);
       }
@@ -46,20 +74,47 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     initializeMiniKit();
   }, []);
 
-  // Combined installation check
+  // Combined installation check with logging
   const isMiniKitInstalled = isInstalled && miniKitReady;
+  
+  // Log status changes
+  useEffect(() => {
+    console.log('📊 LoginScreen status update:', {
+      isInstalled,
+      miniKitReady,
+      isMiniKitInstalled,
+      buttonState,
+      timestamp: new Date().toISOString()
+    });
+  }, [isInstalled, miniKitReady, isMiniKitInstalled, buttonState]);
 
   const onClickVerify = async (verificationLevel: VerificationLevel) => {
+    console.log('🚀 Starting verification process...');
+    console.log('📊 Pre-verification status:', {
+      isInstalled,
+      miniKitReady,
+      isMiniKitInstalled,
+      verificationLevel,
+      timestamp: new Date().toISOString()
+    });
+    
     setButtonState("pending");
     setWhichVerification(verificationLevel);
 
     try {
+      console.log('🔐 Calling MiniKit.commandsAsync.verify...');
       const result = await MiniKit.commandsAsync.verify({
         action: "login", // Make sure to create this in the developer portal -> incognito actions
         verification_level: verificationLevel,
       });
 
-      console.log("World ID verification result:", result.finalPayload);
+      console.log("✅ World ID verification result:", result.finalPayload);
+      console.log("📋 Verification result details:", {
+        hasResult: !!result,
+        hasFinalPayload: !!result?.finalPayload,
+        payloadKeys: result?.finalPayload ? Object.keys(result.finalPayload) : [],
+        timestamp: new Date().toISOString()
+      });
 
       // Verify the proof
       const response = await fetch("/api/verify-proof", {
@@ -146,7 +201,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
   // Check if user is already authenticated
   React.useEffect(() => {
+    console.log('🔍 Checking existing authentication...', {
+      isAuthenticated,
+      hasSession: !!session?.user,
+      sessionUser: session?.user,
+      timestamp: new Date().toISOString()
+    });
+    
     if (isAuthenticated || session?.user) {
+      console.log('✅ User already authenticated, calling onLoginSuccess');
       onLoginSuccess();
     }
   }, [isAuthenticated, session, onLoginSuccess]);
@@ -199,6 +262,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 World App is not installed. Please install World App to
                 continue.
               </p>
+              <p className="text-xs text-yellow-600 mt-2">
+                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}
+              </p>
             </div>
           )}
           
@@ -207,8 +273,21 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <p className="text-sm text-blue-800">
                 Initializing World ID...
               </p>
+              <p className="text-xs text-blue-600 mt-2">
+                Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}
+              </p>
             </div>
           )}
+          
+          {/* Debug info always visible */}
+          <div className="text-center p-2 bg-gray-50 rounded-xl border border-gray-200 mt-2">
+            <p className="text-xs text-gray-600">
+              Debug Status: miniKitReady={String(miniKitReady)} | isInstalled={String(isInstalled)} | isMiniKitInstalled={String(isMiniKitInstalled)}
+            </p>
+            <p className="text-xs text-gray-600">
+              UserAgent: {navigator.userAgent.includes('WorldApp') ? 'WorldApp detected' : 'Not WorldApp'}
+            </p>
+          </div>
         </div>
       </div>
     </div>
