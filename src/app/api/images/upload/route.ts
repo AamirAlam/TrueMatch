@@ -54,13 +54,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Sanitize filename for Lighthouse SDK
+    // Remove special characters and spaces, keep only alphanumeric, dots, hyphens, underscores
+    const sanitizedName = file.name
+      .replace(/[^a-zA-Z0-9.\-_]/g, '_')
+      .replace(/_{2,}/g, '_')
+      .toLowerCase();
+
     // Convert File to Buffer for Lighthouse SDK
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     // Create a temporary file-like object for Lighthouse
     const fileData = { // eslint-disable-line @typescript-eslint/no-unused-vars
-      name: file.name,
+      name: sanitizedName,
       buffer: buffer,
       size: file.size,
       type: file.type
@@ -84,7 +91,8 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         cid: cid,
-        fileName: uploadResponse.data.Name,
+        fileName: uploadResponse.data.Name || sanitizedName,
+        originalFileName: file.name,
         size: uploadResponse.data.Size,
         gatewayUrl: gatewayUrl,
         ipfsUrl: `ipfs://${cid}`,
