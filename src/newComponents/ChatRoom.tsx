@@ -40,23 +40,28 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
   useEffect(() => {
     if (!conversationId || !isAuthenticated || !session) return;
 
-    const unsubscribe = firebaseService.subscribeToMessages(
-      conversationId,
-      (newMessages) => {
-        setMessages(newMessages);
-        setIsLoading(false);
-      }
-    );
-
-    // Mark messages as read when entering the chat
-    if (session.nullifier_hash) {
-      firebaseService.markMessagesAsRead(
+    try {
+      const unsubscribe = firebaseService.subscribeToMessages(
         conversationId,
-        session.nullifier_hash
+        (newMessages) => {
+          setMessages(newMessages);
+          setIsLoading(false);
+        }
       );
-    }
 
-    return () => unsubscribe();
+      // Mark messages as read when entering the chat
+      if (session.nullifier_hash) {
+        firebaseService.markMessagesAsRead(
+          conversationId,
+          session.nullifier_hash
+        );
+      }
+
+      return () => unsubscribe();
+    } catch (error) {
+      console.error("Error setting up chat room:", error);
+      setIsLoading(false);
+    }
   }, [conversationId, isAuthenticated, session]);
 
   const handleSendMessage = async () => {
@@ -76,6 +81,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
       setNewMessage("");
     } catch (error) {
       console.error("Error sending message:", error);
+      // Show user-friendly error message
+      alert("Failed to send message. Please try again.");
     } finally {
       setIsSending(false);
     }
