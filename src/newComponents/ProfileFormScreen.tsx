@@ -96,46 +96,70 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   };
 
   const addPhoto = () => {
-    if (profileData.photos.length >= 4) {
-      setError("You can upload a maximum of 4 photos");
-      return;
-    }
-
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";
-    input.multiple = false;
-
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (file) {
-        // Validate file size (max 10MB to match API)
-        if (file.size > 10 * 1024 * 1024) {
-          setError("Photo size must be less than 10MB");
-          return;
-        }
+      if (!file) return;
 
-        // Validate file type
-        const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
-        if (!supportedTypes.includes(file.type)) {
-          setError("Please select a valid image file (JPEG, PNG, GIF, WebP, SVG)");
-          return;
-        }
-
-        setError(null);
-
-        // Store file locally for later upload
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const result = e.target?.result as string;
-          setProfileData((prev) => ({
-            ...prev,
-            photos: [...prev.photos, result],
-            pendingFiles: [...prev.pendingFiles, file],
-          }));
-        };
-        reader.readAsDataURL(file);
+      if (profileData.photos.length + profileData.pendingFiles.length >= 6) {
+        setError("Maximum 6 photos allowed");
+        return;
       }
+      
+      // Handle iOS images - log file details for debugging
+      console.log('Adding photo:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified
+      });
+      
+      // iOS devices sometimes don't set proper MIME types, so check file extension
+      let processedFile = file;
+      if (!file.type || file.type === '') {
+        const extension = file.name.toLowerCase().split('.').pop();
+        if (extension === 'heic' || extension === 'heif') {
+          console.log('iOS image detected by extension:', extension);
+          // Create a new File object with proper MIME type
+          processedFile = new File([file], file.name, {
+            type: extension === 'heic' ? 'image/heic' : 'image/heif',
+            lastModified: file.lastModified
+          });
+        } else if (extension === 'jpg' || extension === 'jpeg') {
+          processedFile = new File([file], file.name, {
+            type: 'image/jpeg',
+            lastModified: file.lastModified
+          });
+        } else if (extension === 'png') {
+          processedFile = new File([file], file.name, {
+            type: 'image/png',
+            lastModified: file.lastModified
+          });
+        }
+      }
+
+      // Validate file size (max 10MB to match API)
+      if (processedFile.size > 10 * 1024 * 1024) {
+        setError("Photo size must be less than 10MB");
+        return;
+      }
+
+      // Validate file type - include iOS formats
+      const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml', 'image/heic', 'image/heif'];
+      if (!supportedTypes.includes(processedFile.type)) {
+        setError("Please select a valid image file (JPEG, PNG, GIF, WebP, SVG, HEIC, HEIF)");
+        return;
+      }
+
+      setError(null);
+
+      // Store file locally for later upload
+      setProfileData((prev) => ({
+        ...prev,
+        pendingFiles: [...prev.pendingFiles, processedFile]
+      }));
     };
 
     input.click();
