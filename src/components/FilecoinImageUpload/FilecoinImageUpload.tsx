@@ -39,7 +39,44 @@ export default function FilecoinImageUpload() {
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setSelectedFile(file);
+      // Enhanced iPhone debugging
+      console.log('iPhone file selection debug:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        userAgent: navigator.userAgent,
+        isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent)
+      });
+
+      // Handle iOS images that might not have proper MIME types
+      let processedFile = file;
+      if (!file.type || file.type === '') {
+        const extension = file.name.toLowerCase().split('.').pop();
+        console.log('Missing MIME type, detected extension:', extension);
+        
+        if (extension === 'heic' || extension === 'heif') {
+          processedFile = new File([file], file.name, {
+            type: extension === 'heic' ? 'image/heic' : 'image/heif',
+            lastModified: file.lastModified
+          });
+          console.log('Created new file with HEIC/HEIF MIME type:', processedFile.type);
+        } else if (extension === 'jpg' || extension === 'jpeg') {
+          processedFile = new File([file], file.name, {
+            type: 'image/jpeg',
+            lastModified: file.lastModified
+          });
+          console.log('Created new file with JPEG MIME type:', processedFile.type);
+        } else if (extension === 'png') {
+          processedFile = new File([file], file.name, {
+            type: 'image/png',
+            lastModified: file.lastModified
+          });
+          console.log('Created new file with PNG MIME type:', processedFile.type);
+        }
+      }
+
+      setSelectedFile(processedFile);
       setUploadResult(null);
       setDealStatus(null);
     }
@@ -49,26 +86,45 @@ export default function FilecoinImageUpload() {
     if (!selectedFile) return;
 
     setUploading(true);
+    console.log('Starting upload for iPhone file:', {
+      name: selectedFile.name,
+      type: selectedFile.type,
+      size: selectedFile.size
+    });
+
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
+      console.log('Sending request to /api/images/upload...');
       const response = await fetch('/api/images/upload', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       const result: UploadResponse = await response.json();
+      console.log('Full upload response:', result);
+      
       setUploadResult(result);
-      console.log('upload response ', result)
+      
       if (result.success) {
+        console.log('Upload successful, CID:', result.data?.cid);
         // Automatically check deal status after upload
         setTimeout(() => checkDealStatus(result.data!.cid), 2000);
+      } else {
+        console.error('Upload failed:', result.error);
       }
-    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      console.error('Upload error caught:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to upload file';
+      console.error('Error details:', errorMessage);
+      
       setUploadResult({
         success: false,
-        error: 'Failed to upload file'
+        error: errorMessage
       });
     } finally {
       setUploading(false);
@@ -145,7 +201,7 @@ export default function FilecoinImageUpload() {
                 Select Image
               </button>
               <p className="text-sm text-gray-500 mt-2">
-                Supports JPEG, PNG, GIF, WebP, SVG (max 10MB)
+                Supports JPEG, PNG, GIF, WebP, SVG, HEIC, HEIF (max 10MB)
               </p>
             </div>
           ) : (
