@@ -1,48 +1,92 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
 import Header from "../../newComponents/Header";
 import SwipeCards from "../../newComponents/SwipeCards";
 import ChatList from "../../newComponents/ChatList";
+import Chat from "../../newComponents/Chat";
 import Profile from "../../newComponents/Profile";
 import Navigation from "../../newComponents/Navigation";
 import WelcomeScreen from "../../newComponents/WelcomeScreen";
 import LoginScreen from "../../newComponents/LoginScreen";
 import ProfileFormScreen from "../../newComponents/ProfileFormScreen";
 import { firebaseService } from "../../lib/firebaseService";
+import TestSessionInfo from "../TestSessionInfo";
+import ConversationTest from "../../newComponents/ConversationTest";
+import ChatRoom from "../../newComponents/ChatRoom";
 
-type TabType = "home" | "chat" | "profile";
+type TabType = "home" | "chat" | "profile" | "test";
 type AppState = "welcome" | "login" | "profile-form" | "main-app";
 
 function WorldCoinApp() {
   const [activeTab, setActiveTab] = useState<TabType>("home");
   const [appState, setAppState] = useState<AppState>("welcome");
   const [isCheckingProfile, setIsCheckingProfile] = useState(false);
+  const [selectedConversation, setSelectedConversation] = useState<{
+    conversationId: string;
+    otherUserId: string;
+    otherUserProfile: any;
+  } | null>(null);
+  const [isInChatRoom, setIsInChatRoom] = useState(false);
   const { data: session, status } = useSession();
+  const {
+    session: customSession,
+    isAuthenticated,
+    isLoading: sessionLoading,
+    checkUserProfile,
+    checkUserProfileByWallet,
+    login: loginSession,
+  } = useSessionManagement();
 
   // Development flag to skip WorldCoin login
   const SKIP_WORLDCOIN_LOGIN =
     process.env.NEXT_PUBLIC_SKIP_WORLDCOIN_LOGIN === "true";
 
-  console.log("SKIP_WORLDCOIN_LOGIN:", SKIP_WORLDCOIN_LOGIN);
-  console.log(
-    "NEXT_PUBLIC_SKIP_WORLDCOIN_LOGIN:",
-    process.env.NEXT_PUBLIC_SKIP_WORLDCOIN_LOGIN
-  );
-
-  // Mock user for development
-  const mockUser = {
-    id: "mock-user-id",
+  // Test nullifier_hash for development
+  const TEST_NULLIFIER_HASH = "123123";
+  const TEST_SESSION_DATA = {
+    nullifier_hash: TEST_NULLIFIER_HASH,
     walletAddress: "0x1234567890123456789012345678901234567890",
-    username: "Tahir",
+    username: "Test User",
     profilePictureUrl:
       "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
-    email: "tahir@sayy.ai",
   };
 
-  // Check if user has existing profile
-  const checkUserProfile = async (walletAddress: string) => {
-    console.log("Checking profile for wallet:", walletAddress);
+  const handleChatSelect = (
+    conversationId: string,
+    otherUserId: string,
+    otherUserProfile: any
+  ) => {
+    setSelectedConversation({
+      conversationId,
+      otherUserId,
+      otherUserProfile,
+    });
+    setIsInChatRoom(true);
+    console.log("Opening chat room:", {
+      conversationId,
+      otherUserId,
+      otherUserProfile,
+    });
+  };
+
+  const handleBackToChatList = () => {
+    setIsInChatRoom(false);
+    setSelectedConversation(null);
+  };
+
+  // Check if user has existing profile by nullifier_hash first, then wallet address
+  const checkUserProfileWrapper = async (
+    nullifierHash?: string,
+    walletAddress?: string
+  ) => {
+    console.log(
+      "Checking profile for nullifier_hash:",
+      nullifierHash,
+      "wallet:",
+      walletAddress
+    );
     setIsCheckingProfile(true);
     try {
       // Add a timeout to prevent hanging
@@ -50,8 +94,17 @@ function WorldCoinApp() {
         setTimeout(() => reject(new Error("Profile check timeout")), 5000)
       );
 
-      const profilePromise =
-        firebaseService.getUserProfileByWallet(walletAddress);
+      let profilePromise;
+
+      // Try nullifier_hash first if available
+      if (nullifierHash) {
+        profilePromise = checkUserProfile(nullifierHash);
+      } else if (walletAddress) {
+        // Fallback to wallet address
+        profilePromise = checkUserProfileByWallet(walletAddress);
+      } else {
+        throw new Error("No nullifier_hash or wallet address provided");
+      }
 
       const existingProfile = await Promise.race([
         profilePromise,
@@ -59,8 +112,10 @@ function WorldCoinApp() {
       ]);
       console.log("Profile check result:", existingProfile);
       if (existingProfile) {
+        console.log("Profile found, proceeding to main app");
         setAppState("main-app");
       } else {
+        console.log("No profile found, showing profile form");
         setAppState("profile-form");
       }
     } catch (error) {
@@ -79,36 +134,93 @@ function WorldCoinApp() {
       SKIP_WORLDCOIN_LOGIN,
       "status:",
       status,
+      "sessionLoading:",
+      sessionLoading,
+      "isAuthenticated:",
+      isAuthenticated,
+      "customSession:",
+      customSession,
       "appState:",
       appState
     );
 
     if (SKIP_WORLDCOIN_LOGIN) {
-      // In development mode, stay on welcome screen and let user choose
-      console.log("Development mode: staying on welcome screen");
+      // In development mode, check if we have a test session or stay on welcome screen
+      console.log("Development mode: checking for test session");
+      if (isAuthenticated && customSession) {
+        console.log("Test session found, proceeding to profile check");
+        checkUserProfileWrapper(
+          customSession.nullifier_hash,
+          customSession.walletAddress
+        );
+      }
       return;
     }
 
-    if (status === "loading") return; // Still loading
+    // Wait for both session loading states to complete
+    if (status === "loading" || sessionLoading) return;
 
-    if (session?.user) {
-      // User is authenticated, check if they have a profile
+    // Check if user is authenticated via custom session (WorldCoin)
+    if (isAuthenticated && customSession) {
+      console.log(
+        "User authenticated via WorldCoin session:",
+        customSession.nullifier_hash
+      );
+      // User is authenticated, check if they have a profile using nullifier_hash
+      checkUserProfileWrapper(
+        customSession.nullifier_hash,
+        customSession.walletAddress
+      );
+    } else if (session?.user) {
+      // Fallback to NextAuth session
+      console.log("User authenticated via NextAuth session");
       if (session.user.walletAddress) {
-        checkUserProfile(session.user.walletAddress);
+        checkUserProfileWrapper(undefined, session.user.walletAddress);
       } else {
         setAppState("profile-form");
       }
     } else {
       // User is not authenticated, show welcome screen
+      console.log("User not authenticated, showing welcome screen");
       if (appState === "main-app") {
         setAppState("welcome");
       }
     }
-  }, [session, status, SKIP_WORLDCOIN_LOGIN]);
+  }, [
+    session,
+    status,
+    sessionLoading,
+    isAuthenticated,
+    customSession,
+    SKIP_WORLDCOIN_LOGIN,
+  ]);
 
   const handleLoginSuccess = () => {
     // After successful login, the useEffect will handle checking the profile
     // No need to do anything here as the session change will trigger the check
+  };
+
+  // Handle skip to home for development
+  const handleSkipToHome = async () => {
+    if (SKIP_WORLDCOIN_LOGIN) {
+      console.log(
+        "Creating test session with nullifier_hash:",
+        TEST_NULLIFIER_HASH
+      );
+      try {
+        const success = await loginSession(TEST_SESSION_DATA);
+        if (success) {
+          console.log("Test session created successfully");
+          setAppState("main-app");
+        } else {
+          console.error("Failed to create test session");
+        }
+      } catch (error) {
+        console.error("Error creating test session:", error);
+      }
+    } else {
+      setAppState("main-app");
+    }
   };
 
   const renderContent = () => {
@@ -122,7 +234,7 @@ function WorldCoinApp() {
     );
 
     // Show loading state while session is loading
-    if (status === "loading") {
+    if (status === "loading" || sessionLoading) {
       return (
         <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300 flex items-center justify-center">
           <div className="text-center">
@@ -150,7 +262,7 @@ function WorldCoinApp() {
         return (
           <WelcomeScreen
             onGetStarted={() => setAppState("login")}
-            onSkipToHome={() => setAppState("main-app")}
+            onSkipToHome={handleSkipToHome}
           />
         );
       case "login":
@@ -162,13 +274,28 @@ function WorldCoinApp() {
           />
         );
       case "main-app":
+        // Show chat room if user is in a conversation
+        if (isInChatRoom && selectedConversation) {
+          return (
+            <ChatRoom
+              conversationId={selectedConversation.conversationId}
+              otherUserId={selectedConversation.otherUserId}
+              otherUserProfile={selectedConversation.otherUserProfile}
+              onBack={handleBackToChatList}
+            />
+          );
+        }
+
+        // Show regular tabs
         switch (activeTab) {
           case "home":
             return <SwipeCards />;
           case "chat":
-            return <ChatList />;
+            return <ChatList onChatSelect={handleChatSelect} />;
           case "profile":
             return <Profile />;
+          case "test":
+            return <ConversationTest />;
           default:
             return <SwipeCards />;
         }
@@ -176,7 +303,7 @@ function WorldCoinApp() {
         return (
           <WelcomeScreen
             onGetStarted={() => setAppState("login")}
-            onSkipToHome={() => setAppState("main-app")}
+            onSkipToHome={handleSkipToHome}
           />
         );
     }
@@ -184,11 +311,16 @@ function WorldCoinApp() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300">
-      {appState === "main-app" && <Header />}
-      <main className={appState === "main-app" ? "pb-20 pt-16" : ""}>
+      <TestSessionInfo />
+      {appState === "main-app" && !isInChatRoom && <Header />}
+      <main
+        className={
+          appState === "main-app" && !isInChatRoom ? "pb-20 pt-16" : ""
+        }
+      >
         {renderContent()}
       </main>
-      {appState === "main-app" && (
+      {appState === "main-app" && !isInChatRoom && (
         <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
       )}
     </div>

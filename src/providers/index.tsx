@@ -4,6 +4,7 @@ import { Session } from "next-auth";
 import { SessionProvider } from "next-auth/react";
 import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
+import { SessionProvider as CustomSessionProvider } from "@/contexts/SessionContext";
 
 const ErudaProvider = dynamic(
   () => import("@/providers/Eruda").then((c) => c.ErudaProvider),
@@ -29,23 +30,27 @@ interface ClientProvidersProps {
  * - MiniKitProvider:
  *     - Required for MiniKit functionality.
  *
- * This component ensures both providers are available to all child components.
+ * - CustomSessionProvider:
+ *     - Manages WorldCoin session with nullifier_hash.
+ *     - Handles localStorage persistence and session validation.
+ *
+ * This component ensures all providers are available to all child components.
  */
 export default function ClientProviders({
   children,
   session,
 }: ClientProvidersProps) {
   return (
-    <ErudaProvider> 
-    <MiniKitProvider>
-      <SessionProvider
-        session={session}
-        refetchInterval={0}
-        refetchOnWindowFocus={false}
-      >
-        {children}
-      </SessionProvider>
-    </MiniKitProvider>
+    <ErudaProvider>
+      <MiniKitProvider>
+        <SessionProvider
+          session={session}
+          refetchInterval={0}
+          refetchOnWindowFocus={false}
+        >
+          <CustomSessionProvider>{children}</CustomSessionProvider>
+        </SessionProvider>
+      </MiniKitProvider>
     </ErudaProvider>
-    );
+  );
 }

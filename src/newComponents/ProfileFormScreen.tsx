@@ -1,20 +1,30 @@
 import React, { useState } from "react";
 import { Camera, MapPin, Calendar, User, Plus, X, Mail } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { firebaseService, ProfileFormData } from "../lib/firebaseService";
+import { useSessionManagement } from "@/hooks/useSessionManagement";
+import {
+  firebaseService,
+  ProfileFormData,
+  UserProfile,
+} from "../lib/firebaseService";
 
 interface ProfileFormScreenProps {
   onProfileComplete: () => void;
+  isEditing?: boolean;
+  existingProfile?: UserProfile | null;
 }
 
 const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   onProfileComplete,
+  isEditing = false,
+  existingProfile = null,
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const { data: session } = useSession();
+  const { session: customSession } = useSessionManagement();
 
   // Development flag to skip WorldCoin login
   const SKIP_WORLDCOIN_LOGIN =
@@ -30,19 +40,18 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     email: "tahir@sayy.ai",
   };
   const [profileData, setProfileData] = useState({
-    email: SKIP_WORLDCOIN_LOGIN ? mockUser.email : "",
-    photos: [] as string[],
-    name: "",
-    age: "",
-    bio: "",
-    location: "",
-    interests: [] as string[],
-    lookingFor: "",
-    education: "",
-    occupation: "",
+    photos: existingProfile?.photos || [],
+    name: existingProfile?.name || "",
+    age: existingProfile?.age || "",
+    bio: existingProfile?.bio || "",
+    location: existingProfile?.location || "",
+    interests: existingProfile?.interests || [],
+    lookingFor: existingProfile?.lookingFor || "",
+    education: existingProfile?.education || "",
+    occupation: existingProfile?.occupation || "",
   });
 
-  const totalSteps = 5;
+  const totalSteps = 4; // Reduced from 5 since we removed email step
 
   const availableInterests = [
     "Travel",
@@ -118,19 +127,13 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
 
   const validateCurrentStep = () => {
     switch (currentStep) {
-      case 1: // Email step
-        if (!profileData.email || !profileData.email.includes("@")) {
-          setError("Please enter a valid email address");
-          return false;
-        }
-        break;
-      case 2: // Photos step
+      case 1: // Photos step (was case 2)
         if (profileData.photos.length < 2) {
           setError("Please add at least 2 photos");
           return false;
         }
         break;
-      case 3: // Basic info step
+      case 2: // Basic info step
         if (!profileData.name.trim()) {
           setError("Please enter your full name");
           return false;
@@ -148,13 +151,13 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
           return false;
         }
         break;
-      case 4: // Interests step
+      case 3: // Interests step
         if (profileData.interests.length < 3) {
           setError("Please select at least 3 interests");
           return false;
         }
         break;
-      case 5: // Additional details step
+      case 4: // Additional details step
         if (!profileData.lookingFor) {
           setError("Please select what you're looking for");
           return false;
@@ -166,10 +169,12 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   };
 
   const saveProfile = async () => {
-    const currentUser = SKIP_WORLDCOIN_LOGIN ? mockUser : session?.user;
+    // Use custom session if available, otherwise fallback to NextAuth session
+    const currentUser =
+      customSession || (SKIP_WORLDCOIN_LOGIN ? mockUser : session?.user);
 
-    if (!currentUser || !profileData.email) {
-      setError("Missing user session or email");
+    if (!currentUser) {
+      setError("Missing user session");
       return;
     }
 
@@ -189,9 +194,19 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
         occupation: profileData.occupation,
       };
 
+      // Get nullifier_hash from custom session if available
+      const nullifierHash = customSession?.nullifier_hash;
+      if (!nullifierHash) {
+        setError("Missing nullifier hash");
+        return;
+      }
+
+      // Generate unique email based on nullifier_hash
+      const uniqueEmail = `${nullifierHash}@truematch.app`;
+
       await firebaseService.saveUserProfile(
-        profileData.email,
-        currentUser.walletAddress || "",
+        uniqueEmail,
+        nullifierHash,
         currentUser.username || "",
         currentUser.profilePictureUrl || "",
         profileFormData
@@ -224,98 +239,49 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
           <div className="space-y-6">
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Your Email
+                Add Your Photos
               </h2>
               <p className="text-gray-600">
-                We'll use this to save your profile data
+                Upload at least 2 photos to get started
               </p>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    value={profileData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border-2 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all text-gray-900 placeholder-gray-500 ${
-                      SKIP_WORLDCOIN_LOGIN
-                        ? "border-gray-300 bg-gray-100 cursor-not-allowed"
-                        : "bg-white border-gray-200 hover:border-gray-300 focus:border-purple-500"
-                    }`}
-                    placeholder="Enter your email address"
-                    required
-                    readOnly={SKIP_WORLDCOIN_LOGIN}
-                  />
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                {profileData.photos.map((photo, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={photo}
+                      alt={`Photo ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-2xl"
+                    />
+                    <button
+                      onClick={() => removePhoto(index)}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {profileData.photos.length < 6 && (
+                  <div
+                    onClick={addPhoto}
+                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center cursor-pointer hover:border-purple-500 transition-colors group"
+                  >
+                    <div className="text-center">
+                      <Camera className="w-8 h-8 text-gray-400 group-hover:text-purple-500 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500 group-hover:text-purple-500">
+                        Add Photo
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         );
 
       case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                Add Your Photos
-              </h2>
-              <p className="text-gray-600">
-                Upload at least 2 photos to get started
-              </p>
-              {profileData.photos.length > 0 && (
-                <p className="text-sm text-green-600 mt-2">
-                  {profileData.photos.length} photo
-                  {profileData.photos.length !== 1 ? "s" : ""} added
-                </p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              {Array.from({ length: 6 }).map((_, index) => (
-                <div key={index} className="aspect-square">
-                  {profileData.photos[index] ? (
-                    <div className="relative w-full h-full">
-                      <img
-                        src={profileData.photos[index]}
-                        alt={`Photo ${index + 1}`}
-                        className="w-full h-full object-cover rounded-2xl"
-                      />
-                      <button
-                        onClick={() => removePhoto(index)}
-                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full flex items-center justify-center"
-                      >
-                        <X className="w-3 h-3 text-white" />
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={addPhoto}
-                      className="w-full h-full border-2 border-dashed border-gray-300 rounded-2xl flex items-center justify-center hover:border-purple-400 transition-colors group"
-                    >
-                      {index === 0 ? (
-                        <div className="text-center">
-                          <Camera className="w-8 h-8 text-gray-400 group-hover:text-purple-500 mx-auto mb-1" />
-                          <span className="text-xs text-gray-500">
-                            Main Photo
-                          </span>
-                        </div>
-                      ) : (
-                        <Plus className="w-6 h-6 text-gray-400 group-hover:text-purple-500" />
-                      )}
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        );
-
-      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -394,7 +360,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
           </div>
         );
 
-      case 4:
+      case 3:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -428,7 +394,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
           </div>
         );
 
-      case 5:
+      case 4:
         return (
           <div className="space-y-6">
             <div className="text-center">
@@ -501,16 +467,16 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-200 via-purple-200 to-indigo-300 flex items-center justify-center p-4">
       <div className="max-w-sm w-full bg-white rounded-3xl p-8 shadow-2xl">
-        {/* Development Mode Indicator */}
-        {SKIP_WORLDCOIN_LOGIN && (
-          <div className="mb-4 p-2 bg-yellow-100 border border-yellow-300 rounded-lg">
-            <p className="text-xs text-yellow-800 text-center font-medium">
-              🚧 Development Mode - Using tahir@sayy.ai
+        {/* Header */}
+        <div className="mb-8">
+          <div className="text-center mb-4">
+            <h1 className="text-2xl font-bold text-gray-900">
+              {isEditing ? "Edit Profile" : "Complete Your Profile"}
+            </h1>
+            <p className="text-gray-600">
+              {isEditing ? "Update your information" : "Tell us about yourself"}
             </p>
           </div>
-        )}
-        {/* Progress Bar */}
-        <div className="mb-8">
           <div className="flex justify-between items-center mb-2">
             <span className="text-sm font-medium text-gray-600">
               Step {currentStep} of {totalSteps}
@@ -534,7 +500,11 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
         {success && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-2xl">
             <p className="text-green-600 text-sm text-center">
-              ✅ Profile saved successfully! Redirecting...
+              ✅{" "}
+              {isEditing
+                ? "Profile updated successfully!"
+                : "Profile saved successfully!"}{" "}
+              Redirecting...
             </p>
           </div>
         )}

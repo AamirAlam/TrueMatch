@@ -1,7 +1,7 @@
-import React from 'react';
-import { Home, MessageCircle, User } from 'lucide-react';
+import React from "react";
+import { Home, MessageCircle, User, TestTube } from "lucide-react";
 
-type TabType = 'home' | 'chat' | 'profile';
+type TabType = "home" | "chat" | "profile" | "test";
 
 interface NavigationProps {
   activeTab: TabType;
@@ -10,9 +10,10 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'home', icon: Home, label: 'Home' },
-    { id: 'chat', icon: MessageCircle, label: 'Chat' },
-    { id: 'profile', icon: User, label: 'Profile' },
+    { id: "home", icon: Home, label: "Home" },
+    { id: "chat", icon: MessageCircle, label: "Chat" },
+    { id: "profile", icon: User, label: "Profile" },
+    { id: "test", icon: TestTube, label: "Test" },
   ] as const;
 
   return (
@@ -25,8 +26,8 @@ const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
               onClick={() => onTabChange(id)}
               className={`relative p-3 rounded-full transition-all duration-300 ${
                 activeTab === id
-                  ? 'bg-white text-gray-900'
-                  : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                  ? "bg-white text-gray-900"
+                  : "text-gray-400 hover:text-white hover:bg-gray-800"
               }`}
             >
               <Icon className="w-6 h-6" />
