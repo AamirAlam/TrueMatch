@@ -243,25 +243,56 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
       const file = files[i];
       setUploadProgress(`Uploading photo ${i + 1} of ${files.length} to Filecoin...`);
       
+      // Enhanced iPhone debugging (same as FilecoinImageUpload)
+      console.log('ProfileForm iPhone upload debug:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        userAgent: navigator.userAgent,
+        isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent)
+      });
+      
       try {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('/api/images/upload', {
+        const apiUrl = '/api/images/upload';
+        const fullUrl = `${window.location.origin}${apiUrl}`;
+        
+        console.log('ProfileForm API URL details:', {
+          apiUrl,
+          fullUrl,
+          origin: window.location.origin,
+          hostname: window.location.hostname,
+          port: window.location.port,
+          protocol: window.location.protocol
+        });
+        
+        console.log('ProfileForm sending request to:', fullUrl);
+        const response = await fetch(apiUrl, {
           method: 'POST',
           body: formData,
         });
 
+        console.log('ProfileForm response status:', response.status);
+        console.log('ProfileForm response headers:', Object.fromEntries(response.headers.entries()));
+
         const result: UploadResponse = await response.json();
+        console.log('ProfileForm full upload response:', result);
 
         if (result.success && result.data) {
+          console.log('ProfileForm upload successful, CID:', result.data.cid);
           uploadedPhotos.push(result.data);
         } else {
+          console.error('ProfileForm upload failed:', result.error);
           throw new Error(result.error || "Failed to upload photo to Filecoin");
         }
       } catch (error) {
-        console.error('Photo upload error:', error);
-        throw new Error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error('ProfileForm upload error caught:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('ProfileForm error details:', errorMessage);
+        throw new Error(`Failed to upload ${file.name}: ${errorMessage}`);
       }
     }
     
