@@ -13,12 +13,21 @@ import {
 } from "firebase/firestore";
 import { db } from "./firebase";
 
+export interface PhotoMetadata {
+  cid: string;
+  fileName: string;
+  size: string;
+  gatewayUrl: string;
+  ipfsUrl: string;
+  uploadedAt: string;
+}
+
 export interface UserProfile {
   email: string;
   nullifierHash: string; // Primary identifier from WorldCoin
   username: string;
   profilePictureUrl: string;
-  photos: string[];
+  photos: (string | PhotoMetadata)[];
   name: string;
   age: string;
   bio: string;
@@ -32,7 +41,7 @@ export interface UserProfile {
 }
 
 export interface ProfileFormData {
-  photos: string[];
+  photos: (string | PhotoMetadata)[];
   name: string;
   age: string;
   bio: string;

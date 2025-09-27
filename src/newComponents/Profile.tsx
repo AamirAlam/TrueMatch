@@ -271,18 +271,28 @@ const Profile: React.FC = () => {
           </div>
           <div className="grid grid-cols-3 gap-2">
             {profile.photos && profile.photos.length > 0 ? (
-              profile.photos.map((photo, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={photo}
-                    alt={`Photo ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-xl"
-                  />
-                  <div className="absolute inset-0 bg-black/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Camera className="w-5 h-5 text-white" />
+              profile.photos.map((photo, index) => {
+                const photoUrl = typeof photo === 'string' ? photo : photo.gatewayUrl;
+                const photoName = typeof photo === 'string' ? `Photo ${index + 1}` : photo.fileName;
+                
+                return (
+                  <div key={index} className="relative group">
+                    <img
+                      src={photoUrl}
+                      alt={photoName}
+                      className="w-full h-24 object-cover rounded-xl"
+                    />
+                    <div className="absolute inset-0 bg-black/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Camera className="w-5 h-5 text-white" />
+                    </div>
+                    {typeof photo !== 'string' && (
+                      <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded">
+                        Filecoin
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))
+                );
+              })
             ) : (
               <div className="col-span-3 text-center py-8">
                 <Camera className="w-12 h-12 text-gray-300 mx-auto mb-2" />

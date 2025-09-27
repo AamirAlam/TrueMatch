@@ -1,17 +1,24 @@
 import React, { useState } from "react";
-import { Camera, MapPin, Calendar, User, Plus, X } from "lucide-react";
+import { Camera, MapPin, Calendar, User, Plus, X, Loader2 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import {
   firebaseService,
   ProfileFormData,
   UserProfile,
+  PhotoMetadata,
 } from "../lib/firebaseService";
 
 interface ProfileFormScreenProps {
   onProfileComplete: () => void;
   isEditing?: boolean;
   existingProfile?: UserProfile | null;
+}
+
+interface UploadResponse {
+  success: boolean;
+  data?: PhotoMetadata;
+  error?: string;
 }
 
 const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
@@ -23,6 +30,8 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string>("");
   const { data: session } = useSession();
   const { session: customSession } = useSessionManagement();
 
@@ -40,7 +49,8 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     email: "tahir@sayy.ai",
   };
   const [profileData, setProfileData] = useState({
-    photos: existingProfile?.photos || [],
+    photos: existingProfile?.photos || [] as (string | PhotoMetadata)[],
+    pendingFiles: [] as File[],
     name: existingProfile?.name || "",
     age: existingProfile?.age || "",
     bio: existingProfile?.bio || "",
@@ -99,25 +109,29 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     input.onchange = (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        // Validate file size (max 5MB)
-        if (file.size > 5 * 1024 * 1024) {
-          setError("Photo size must be less than 5MB");
+        // Validate file size (max 10MB to match API)
+        if (file.size > 10 * 1024 * 1024) {
+          setError("Photo size must be less than 10MB");
           return;
         }
 
         // Validate file type
-        if (!file.type.startsWith("image/")) {
-          setError("Please select a valid image file");
+        const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+        if (!supportedTypes.includes(file.type)) {
+          setError("Please select a valid image file (JPEG, PNG, GIF, WebP, SVG)");
           return;
         }
 
-        // Convert to base64 for now (in production, upload to cloud storage)
+        setError(null);
+
+        // Store file locally for later upload
         const reader = new FileReader();
         reader.onload = (e) => {
           const result = e.target?.result as string;
           setProfileData((prev) => ({
             ...prev,
             photos: [...prev.photos, result],
+            pendingFiles: [...prev.pendingFiles, file],
           }));
         };
         reader.readAsDataURL(file);
@@ -131,6 +145,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     setProfileData((prev) => ({
       ...prev,
       photos: prev.photos.filter((_, i) => i !== index),
+      pendingFiles: prev.pendingFiles.filter((_, i) => i !== index),
     }));
   };
 
@@ -191,6 +206,38 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     return true;
   };
 
+  const uploadFilesToFilecoin = async (files: File[]): Promise<PhotoMetadata[]> => {
+    const uploadedPhotos: PhotoMetadata[] = [];
+    
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploadProgress(`Uploading photo ${i + 1} of ${files.length} to Filecoin...`);
+      
+      try {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const response = await fetch('/api/images/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const result: UploadResponse = await response.json();
+
+        if (result.success && result.data) {
+          uploadedPhotos.push(result.data);
+        } else {
+          throw new Error(result.error || "Failed to upload photo to Filecoin");
+        }
+      } catch (error) {
+        console.error('Photo upload error:', error);
+        throw new Error(`Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    return uploadedPhotos;
+  };
+
   const saveProfile = async () => {
     // Use custom session if available, otherwise fallback to NextAuth session
     const currentUser =
@@ -202,11 +249,30 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
     }
 
     setIsLoading(true);
+    setUploadingPhotos(true);
     setError(null);
 
     try {
+      let finalPhotos: (string | PhotoMetadata)[] = [];
+      
+      // Separate existing photos from new files
+      const existingPhotos = profileData.photos.filter((photo, index) => {
+        return typeof photo !== 'string' || !profileData.pendingFiles[index];
+      });
+      
+      // Upload new files to Filecoin
+      if (profileData.pendingFiles.length > 0) {
+        setUploadProgress(`Uploading ${profileData.pendingFiles.length} photos to Filecoin...`);
+        const uploadedPhotos = await uploadFilesToFilecoin(profileData.pendingFiles);
+        finalPhotos = [...existingPhotos, ...uploadedPhotos];
+      } else {
+        finalPhotos = existingPhotos;
+      }
+      
+      setUploadProgress("Saving profile to database...");
+
       const profileFormData: ProfileFormData = {
-        photos: profileData.photos,
+        photos: finalPhotos,
         name: profileData.name,
         age: profileData.age,
         bio: profileData.bio,
@@ -246,6 +312,8 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
       );
     } finally {
       setIsLoading(false);
+      setUploadingPhotos(false);
+      setUploadProgress("");
     }
   };
 
@@ -274,21 +342,36 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
 
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                {profileData.photos.map((photo, index) => (
-                  <div key={index} className="relative group">
-                    <img
-                      src={photo}
-                      alt={`Photo ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-2xl"
-                    />
-                    <button
-                      onClick={() => removePhoto(index)}
-                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ))}
+                {profileData.photos.map((photo, index) => {
+                  const photoUrl = typeof photo === 'string' ? photo : photo.gatewayUrl;
+                  const photoName = typeof photo === 'string' ? `Photo ${index + 1}` : photo.fileName;
+                  
+                  return (
+                    <div key={index} className="relative group">
+                      <img
+                        src={photoUrl}
+                        alt={photoName}
+                        className="w-full h-32 object-cover rounded-2xl"
+                      />
+                      <button
+                        onClick={() => removePhoto(index)}
+                        className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                      {typeof photo !== 'string' && (
+                        <div className="absolute bottom-1 left-1 bg-black bg-opacity-50 text-white text-xs px-1 py-0.5 rounded">
+                          Filecoin
+                        </div>
+                      )}
+                      {typeof photo === 'string' && photo.startsWith('data:') && (
+                        <div className="absolute bottom-1 left-1 bg-blue-500 bg-opacity-75 text-white text-xs px-1 py-0.5 rounded">
+                          Pending
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
                 {profileData.photos.length < 4 && (
                   <div
                     onClick={addPhoto}
@@ -298,6 +381,9 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
                       <Camera className="w-8 h-8 text-gray-400 group-hover:text-purple-500 mx-auto mb-2" />
                       <p className="text-sm text-gray-500 group-hover:text-purple-500">
                         Add Photo
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        Will upload on save
                       </p>
                     </div>
                   </div>
@@ -522,6 +608,16 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
         {/* Step Content */}
         {renderStep()}
 
+        {/* Upload Progress */}
+        {uploadingPhotos && uploadProgress && (
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-2xl">
+            <div className="flex items-center justify-center">
+              <Loader2 className="w-4 h-4 text-blue-600 mr-2 animate-spin" />
+              <p className="text-blue-600 text-sm text-center">{uploadProgress}</p>
+            </div>
+          </div>
+        )}
+
         {/* Success Message */}
         {success && (
           <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-2xl">
@@ -556,11 +652,13 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
           {!success && (
             <button
               onClick={nextStep}
-              disabled={isLoading}
+              disabled={isLoading || uploadingPhotos}
               className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 text-white py-4 px-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 active:scale-95"
             >
-              {isLoading
-                ? "Saving..."
+              {isLoading || uploadingPhotos
+                ? uploadingPhotos
+                  ? "Uploading Photos..."
+                  : "Saving..."
                 : currentStep === totalSteps
                 ? "Complete Profile"
                 : "Continue"}
