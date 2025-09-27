@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Button, LiveFeedback } from "@worldcoin/mini-apps-ui-kit-react";
 import { MiniKit, VerificationLevel } from "@worldcoin/minikit-js";
@@ -17,10 +17,37 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
   const [whichVerification, setWhichVerification] = useState<VerificationLevel>(
     VerificationLevel.Orb
   );
+  const [miniKitReady, setMiniKitReady] = useState(false);
 
   const { isInstalled } = useMiniKit();
   const { data: session } = useSession();
   const { handleWorldCoinLogin, isAuthenticated } = useSessionManagement();
+
+  // Ensure MiniKit is properly installed and ready
+  useEffect(() => {
+    const initializeMiniKit = async () => {
+      try {
+        // Install MiniKit if not already done
+        if (!MiniKit.isInstalled()) {
+          await MiniKit.install();
+        }
+        
+        // Wait a bit for installation to complete
+        setTimeout(() => {
+          setMiniKitReady(true);
+        }, 500);
+      } catch (error) {
+        console.error('Failed to initialize MiniKit:', error);
+        // Still set ready to true to show the error message
+        setMiniKitReady(true);
+      }
+    };
+
+    initializeMiniKit();
+  }, []);
+
+  // Combined installation check
+  const isMiniKitInstalled = isInstalled && miniKitReady;
 
   const onClickVerify = async (verificationLevel: VerificationLevel) => {
     setButtonState("pending");
@@ -157,20 +184,28 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
           >
             <Button
               onClick={() => onClickVerify(VerificationLevel.Orb)}
-              disabled={buttonState === "pending" || !isInstalled}
+              disabled={buttonState === "pending" || !isMiniKitInstalled}
               size="lg"
               variant="primary"
               className="w-full py-4 text-lg"
             >
-              Verify with Orb
+              {!miniKitReady ? "Initializing..." : "Verify with Orb"}
             </Button>
           </LiveFeedback>
 
-          {!isInstalled && (
+          {miniKitReady && !isInstalled && (
             <div className="text-center p-4 bg-yellow-50 rounded-2xl border border-yellow-200">
               <p className="text-sm text-yellow-800">
                 World App is not installed. Please install World App to
                 continue.
+              </p>
+            </div>
+          )}
+          
+          {!miniKitReady && (
+            <div className="text-center p-4 bg-blue-50 rounded-2xl border border-blue-200">
+              <p className="text-sm text-blue-800">
+                Initializing World ID...
               </p>
             </div>
           )}
