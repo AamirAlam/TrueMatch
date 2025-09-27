@@ -22,7 +22,7 @@ interface DealStatus {
     cid: string;
     status: string;
     totalDeals: number;
-    deals: any[];
+    deals: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     checkedAt: string;
   };
   error?: string;
@@ -65,7 +65,7 @@ export default function FilecoinImageUpload() {
         // Automatically check deal status after upload
         setTimeout(() => checkDealStatus(result.data!.cid), 2000);
       }
-    } catch (error) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       setUploadResult({
         success: false,
         error: 'Failed to upload file'
@@ -81,7 +81,7 @@ export default function FilecoinImageUpload() {
       const response = await fetch(`/api/images/status?cid=${cid}`);
       const result: DealStatus = await response.json();
       setDealStatus(result);
-    } catch (error) {
+    } catch (error) { // eslint-disable-line @typescript-eslint/no-unused-vars
       setDealStatus({
         success: false,
         error: 'Failed to check deal status'

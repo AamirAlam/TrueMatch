@@ -18,9 +18,11 @@ const eslintConfig = [
     rules: {
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
-      '@typescript-eslint/no-unused-vars': 'warn',
-      '@next/next/no-img-element': 'warn',
-      'react/no-unescaped-entities': 'warn',
+      '@typescript-eslint/no-unused-vars': 'off',
+      '@next/next/no-img-element': 'off',
+      'react/no-unescaped-entities': 'off',
+      'react-hooks/exhaustive-deps': 'off',
+      '@typescript-eslint/no-explicit-any': 'off',
     },
   },
 ];

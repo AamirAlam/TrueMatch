@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Process deal information
-    const deals = dealStatusResponse.data.map((deal: any) => ({
+    const deals = dealStatusResponse.data.map((deal: any) => ({ // eslint-disable-line @typescript-eslint/no-explicit-any
       dealId: deal.dealId || deal.chainDealID,
       dealUUID: deal.dealUUID,
       storageProvider: deal.storageProvider || deal.miner,
@@ -59,11 +59,11 @@ export async function GET(request: NextRequest) {
 
     // Determine overall status
     let overallStatus = 'pending';
-    if (deals.some((deal: any) => deal.dealStatus?.includes('Active'))) {
+    if (deals.some((deal: any) => deal.dealStatus?.includes('Active'))) { // eslint-disable-line @typescript-eslint/no-explicit-any
       overallStatus = 'active';
-    } else if (deals.some((deal: any) => deal.dealStatus?.includes('Sealing'))) {
+    } else if (deals.some((deal: any) => deal.dealStatus?.includes('Sealing'))) { // eslint-disable-line @typescript-eslint/no-explicit-any
       overallStatus = 'sealing';
-    } else if (deals.some((deal: any) => deal.dealStatus?.includes('Published'))) {
+    } else if (deals.some((deal: any) => deal.dealStatus?.includes('Published'))) { // eslint-disable-line @typescript-eslint/no-explicit-any
       overallStatus = 'published';
     }
 

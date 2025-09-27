@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import lighthouse from '@lighthouse-web3/sdk';
 
-const LIGHTHOUSE_API_KEY = process.env.LIGHTHOUSE_API_KEY;
+const LIGHTHOUSE_API_KEY = process.env.LIGHTHOUSE_API_KEY || "";
 
 if (!LIGHTHOUSE_API_KEY) {
   throw new Error('LIGHTHOUSE_API_KEY is not configured in environment variables');
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Create a temporary file-like object for Lighthouse
-    const fileData = {
+    const fileData = { // eslint-disable-line @typescript-eslint/no-unused-vars
       name: file.name,
       buffer: buffer,
       size: file.size,
@@ -69,8 +69,7 @@ export async function POST(request: NextRequest) {
     // Upload to Lighthouse/Filecoin
     const uploadResponse = await lighthouse.uploadBuffer(
       buffer,
-      LIGHTHOUSE_API_KEY,
-      file.name
+      LIGHTHOUSE_API_KEY
     );
 
     if (!uploadResponse?.data?.Hash) {

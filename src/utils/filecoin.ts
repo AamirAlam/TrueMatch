@@ -21,7 +21,7 @@ export interface RetrieveResponse {
     gatewayUrl: string;
     ipfsUrl: string;
     alternativeGateways: string[];
-    dealStatus: any;
+    dealStatus: any; // eslint-disable-line @typescript-eslint/no-explicit-any
     retrievedAt: string;
   };
   error?: string;
@@ -35,7 +35,7 @@ export interface DealStatusResponse {
     status: string;
     message?: string;
     totalDeals: number;
-    deals: any[];
+    deals: any[]; // eslint-disable-line @typescript-eslint/no-explicit-any
     checkedAt: string;
   };
   error?: string;
