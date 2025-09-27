@@ -1,8 +1,8 @@
-## Create a Mini App
+# TrueMatch
 
-[Mini apps](https://docs.worldcoin.org/mini-apps) enable third-party developers to create native-like applications within World App.
+A WorldCoin-powered dating mini app that enables verified connections within World App.
 
-This template is a way for you to quickly get started with authentication and examples of some of the trickier commands.
+TrueMatch combines the security of World ID verification with a beautiful, modern dating interface to help you meet genuine people in your neighborhood.
 
 ## Getting Started
 
