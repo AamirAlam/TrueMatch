@@ -110,6 +110,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
             nearby.
           </p>
 
+          <FilecoinImageUpload />
+
           {/* Get Started Button */}
           <button
             onClick={onGetStarted}
@@ -117,6 +119,8 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           >
             Get Started
           </button>
+
+      
 
           {/* Skip Button for Testing */}
           {/* <button
