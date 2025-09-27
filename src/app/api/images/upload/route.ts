@@ -28,6 +28,16 @@ const SUPPORTED_IMAGE_TYPES = [
 // iOS-specific image types that need conversion
 const IOS_IMAGE_TYPES = ['image/heic', 'image/heif'];
 
+// Generate random filename without external dependencies
+function generateRandomFileName(): string {
+  const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  for (let i = 0; i < 16; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
+
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -65,16 +75,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sanitize filename for Lighthouse SDK
-    // Remove special characters and spaces, keep only alphanumeric, dots, hyphens, underscores
-    let sanitizedName = file.name
-      .replace(/[^a-zA-Z0-9.\-_]/g, '_')
-      .replace(/_{2,}/g, '_')
-      .toLowerCase();
+    // Generate random filename to avoid pattern validation issues
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+    const randomFileName = `${generateRandomFileName()}.${fileExtension}`;
 
     console.log('Upload debug info:', {
       originalName: file.name,
-      sanitizedName: sanitizedName,
+      randomFileName: randomFileName,
       fileType: file.type,
       fileSize: file.size,
       isIOSImage: IOS_IMAGE_TYPES.includes(file.type),
@@ -87,6 +94,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     // Handle iOS HEIC/HEIF images by converting to JPEG
+    let finalFileName = randomFileName;
     if (IOS_IMAGE_TYPES.includes(file.type)) {
       console.log('iOS image detected, converting to JPEG...');
       
@@ -95,14 +103,11 @@ export async function POST(request: NextRequest) {
         // In a production app, you'd use a library like 'heic2any' for proper conversion
         console.log('Processing iOS image as JPEG format');
         
-        // Update the sanitized name to have .jpg extension
-        const nameWithoutExt = sanitizedName.replace(/\.(heic|heif)$/i, '');
-        const convertedName = `${nameWithoutExt}.jpg`;
+        // Update the random filename to have .jpg extension
+        const nameWithoutExt = randomFileName.replace(/\.(heic|heif)$/i, '');
+        finalFileName = `${nameWithoutExt}.jpg`;
         
-        console.log('Converted filename:', convertedName);
-        
-        // Update sanitizedName for the upload
-        sanitizedName = convertedName;
+        console.log('Converted filename:', finalFileName);
         
       } catch (conversionError) {
         console.error('iOS image conversion error:', conversionError);
@@ -113,12 +118,12 @@ export async function POST(request: NextRequest) {
     console.log('Buffer created:', {
       bufferLength: buffer.length,
       bufferType: typeof buffer,
-      finalFileName: sanitizedName
+      finalFileName: finalFileName
     });
 
     // Create a temporary file-like object for Lighthouse
     const fileData = { // eslint-disable-line @typescript-eslint/no-unused-vars
-      name: sanitizedName,
+      name: finalFileName,
       buffer: buffer,
       size: file.size,
       type: file.type
@@ -146,7 +151,7 @@ export async function POST(request: NextRequest) {
       success: true,
       data: {
         cid: cid,
-        fileName: uploadResponse.data.Name || sanitizedName,
+        fileName: uploadResponse.data.Name || finalFileName,
         originalFileName: file.name,
         size: uploadResponse.data.Size,
         gatewayUrl: gatewayUrl,
@@ -158,10 +163,17 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Image upload error:', error);
     
+    // Log more detailed error information
+    if (error instanceof Error) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+    }
+    
     return NextResponse.json(
       { 
         error: 'Failed to upload image to Filecoin',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
+        errorType: error instanceof Error ? error.constructor.name : typeof error
       },
       { status: 500 }
     );
