@@ -14,7 +14,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     'pending' | 'success' | 'failed' | undefined
   >(undefined);
   const [whichVerification, setWhichVerification] = useState<VerificationLevel>(
-    VerificationLevel.Device,
+    VerificationLevel.Orb,
   );
   
   const { isInstalled } = useMiniKit();
@@ -26,7 +26,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     
     try {
       const result = await MiniKit.commandsAsync.verify({
-        action: 'test-action', // Make sure to create this in the developer portal -> incognito actions
+        action: 'login-action', // Make sure to create this in the developer portal -> incognito actions
         verification_level: verificationLevel,
       });
       
@@ -37,7 +37,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         method: 'POST',
         body: JSON.stringify({
           payload: result.finalPayload,
-          action: 'test-action',
+          action: 'login-action',
         }),
       });
 
@@ -89,30 +89,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
 
         {/* World ID Verification Buttons */}
         <div className="space-y-4">
-          <LiveFeedback
-            label={{
-              failed: 'Failed to verify',
-              pending: 'Verifying',
-              success: 'Verified',
-            }}
-            state={
-              whichVerification === VerificationLevel.Device
-                ? buttonState
-                : undefined
-            }
-            className="w-full"
-          >
-            <Button
-              onClick={() => onClickVerify(VerificationLevel.Device)}
-              disabled={buttonState === 'pending' || !isInstalled}
-              size="lg"
-              variant="tertiary"
-              className="w-full py-4 text-lg"
-            >
-              Verify with Device
-            </Button>
-          </LiveFeedback>
-          
+         
           <LiveFeedback
             label={{
               failed: 'Failed to verify',
