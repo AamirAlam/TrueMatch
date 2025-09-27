@@ -321,11 +321,18 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({
         return typeof photo !== 'string' || !profileData.pendingFiles[index];
       });
       
-      // Upload new files to Filecoin
+      // Try to upload new files to Filecoin, but don't fail if uploads fail
       if (profileData.pendingFiles.length > 0) {
         setUploadProgress(`Uploading ${profileData.pendingFiles.length} photos to Filecoin...`);
-        const uploadedPhotos = await uploadFilesToFilecoin(profileData.pendingFiles);
-        finalPhotos = [...existingPhotos, ...uploadedPhotos];
+        try {
+          const uploadedPhotos = await uploadFilesToFilecoin(profileData.pendingFiles);
+          finalPhotos = [...existingPhotos, ...uploadedPhotos];
+          console.log('All photos uploaded successfully');
+        } catch (uploadError) {
+          console.warn('Photo upload failed, saving profile without new photos:', uploadError);
+          finalPhotos = existingPhotos; // Use only existing photos if upload fails
+          // Don't throw error, continue with profile save
+        }
       } else {
         finalPhotos = existingPhotos;
       }
