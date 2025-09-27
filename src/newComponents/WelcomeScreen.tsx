@@ -1,5 +1,7 @@
-import React from "react";
-import { Heart, MapPin } from "lucide-react";
+import React from 'react';
+import { Heart, MapPin } from 'lucide-react';
+import FilecoinImageUpload from '@/components/FilecoinImageUpload';
+import { TestWLDPayment } from '@/components/TestWLDPayment';
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -116,6 +118,16 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           >
             Get Started
           </button>
+
+          <TestWLDPayment />
+
+          {/* Skip Button for Testing */}
+          {/* <button
+            onClick={onSkipToHome}
+            className="w-full mt-3 bg-gray-200 text-gray-700 py-3 rounded-2xl font-medium text-sm hover:bg-gray-300 transition-all duration-200"
+          >
+            Skip to Home (Testing)
+          </button> */}
 
           {/* Sign Up Link */}
           <p className="text-gray-500 text-sm mt-4">
