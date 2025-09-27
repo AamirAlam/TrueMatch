@@ -40,7 +40,7 @@ function App() {
           case "home":
             return <SwipeCards />;
           case "chat":
-            return <ChatList />;
+            return <ChatList onChatSelect={() => {}} />;
           case "profile":
             return <Profile />;
           case "test":

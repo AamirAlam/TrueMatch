@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Settings, Edit, Camera, MapPin, Share, Star } from "lucide-react";
+import { Settings, Edit, Camera, Star } from "lucide-react";
 import LogoutButton from "@/components/LogoutButton";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { firebaseService, UserProfile } from "@/lib/firebaseService";

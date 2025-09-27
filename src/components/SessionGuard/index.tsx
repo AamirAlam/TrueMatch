@@ -19,7 +19,7 @@ export default function SessionGuard({
   fallback,
   onLoginSuccess,
 }: SessionGuardProps) {
-  const { isAuthenticated, isLoading, shouldShowLogin } = useAuthGuard();
+  const { isLoading, shouldShowLogin } = useAuthGuard();
 
   // Show loading state while checking authentication
   if (isLoading) {

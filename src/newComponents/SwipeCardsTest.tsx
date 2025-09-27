@@ -56,8 +56,8 @@ const SwipeCardsTest: React.FC = () => {
           <p className="text-gray-600 mb-6">
             View real user profiles from Firebase, swipe through them, and see
             their actual data including profile pictures, names, locations, and
-            education. When you're done swiping, you'll see a "Done for the day"
-            message!
+            education. When you&apos;re done swiping, you&apos;ll see a
+            &quot;Done for the day&quot; message!
           </p>
 
           <div className="space-y-4">

@@ -5,16 +5,15 @@ import { useSessionManagement } from "@/hooks/useSessionManagement";
 import Header from "../../newComponents/Header";
 import SwipeCards from "../../newComponents/SwipeCards";
 import ChatList from "../../newComponents/ChatList";
-import Chat from "../../newComponents/Chat";
 import Profile from "../../newComponents/Profile";
 import Navigation from "../../newComponents/Navigation";
 import WelcomeScreen from "../../newComponents/WelcomeScreen";
 import LoginScreen from "../../newComponents/LoginScreen";
 import ProfileFormScreen from "../../newComponents/ProfileFormScreen";
-import { firebaseService } from "../../lib/firebaseService";
 import TestSessionInfo from "../TestSessionInfo";
 import ConversationTest from "../../newComponents/ConversationTest";
 import ChatRoom from "../../newComponents/ChatRoom";
+import { UserProfile } from "../../lib/firebaseService";
 
 type TabType = "home" | "chat" | "profile" | "test";
 type AppState = "welcome" | "login" | "profile-form" | "main-app";
@@ -26,7 +25,7 @@ function WorldCoinApp() {
   const [selectedConversation, setSelectedConversation] = useState<{
     conversationId: string;
     otherUserId: string;
-    otherUserProfile: any;
+    otherUserProfile: UserProfile;
   } | null>(null);
   const [isInChatRoom, setIsInChatRoom] = useState(false);
   const { data: session, status } = useSession();
@@ -35,7 +34,6 @@ function WorldCoinApp() {
     isAuthenticated,
     isLoading: sessionLoading,
     checkUserProfile,
-    checkUserProfileByWallet,
     login: loginSession,
   } = useSessionManagement();
 
@@ -56,7 +54,7 @@ function WorldCoinApp() {
   const handleChatSelect = (
     conversationId: string,
     otherUserId: string,
-    otherUserProfile: any
+    otherUserProfile: UserProfile
   ) => {
     setSelectedConversation({
       conversationId,
@@ -76,17 +74,9 @@ function WorldCoinApp() {
     setSelectedConversation(null);
   };
 
-  // Check if user has existing profile by nullifier_hash first, then wallet address
-  const checkUserProfileWrapper = async (
-    nullifierHash?: string,
-    walletAddress?: string
-  ) => {
-    console.log(
-      "Checking profile for nullifier_hash:",
-      nullifierHash,
-      "wallet:",
-      walletAddress
-    );
+  // Check if user has existing profile by nullifier_hash
+  const checkUserProfileWrapper = async (nullifierHash: string) => {
+    console.log("Checking profile for nullifier_hash:", nullifierHash);
     setIsCheckingProfile(true);
     try {
       // Add a timeout to prevent hanging
@@ -94,18 +84,7 @@ function WorldCoinApp() {
         setTimeout(() => reject(new Error("Profile check timeout")), 5000)
       );
 
-      let profilePromise;
-
-      // Try nullifier_hash first if available
-      if (nullifierHash) {
-        profilePromise = checkUserProfile(nullifierHash);
-      } else if (walletAddress) {
-        // Fallback to wallet address
-        profilePromise = checkUserProfileByWallet(walletAddress);
-      } else {
-        throw new Error("No nullifier_hash or wallet address provided");
-      }
-
+      const profilePromise = checkUserProfile(nullifierHash);
       const existingProfile = await Promise.race([
         profilePromise,
         timeoutPromise,
@@ -149,10 +128,7 @@ function WorldCoinApp() {
       console.log("Development mode: checking for test session");
       if (isAuthenticated && customSession) {
         console.log("Test session found, proceeding to profile check");
-        checkUserProfileWrapper(
-          customSession.nullifier_hash,
-          customSession.walletAddress
-        );
+        checkUserProfileWrapper(customSession.nullifier_hash);
       }
       return;
     }
@@ -167,18 +143,12 @@ function WorldCoinApp() {
         customSession.nullifier_hash
       );
       // User is authenticated, check if they have a profile using nullifier_hash
-      checkUserProfileWrapper(
-        customSession.nullifier_hash,
-        customSession.walletAddress
-      );
+      checkUserProfileWrapper(customSession.nullifier_hash);
     } else if (session?.user) {
       // Fallback to NextAuth session
       console.log("User authenticated via NextAuth session");
-      if (session.user.walletAddress) {
-        checkUserProfileWrapper(undefined, session.user.walletAddress);
-      } else {
-        setAppState("profile-form");
-      }
+      // NextAuth session doesn't have nullifier_hash, show profile form
+      setAppState("profile-form");
     } else {
       // User is not authenticated, show welcome screen
       console.log("User not authenticated, showing welcome screen");

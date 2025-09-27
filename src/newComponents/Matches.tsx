@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Heart, MessageCircle, Star, Users } from "lucide-react";
+import { Heart, MessageCircle } from "lucide-react";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import { firebaseService, Match, UserProfile } from "@/lib/firebaseService";
 
@@ -174,12 +174,12 @@ const Matches: React.FC<MatchesProps> = ({ onChatSelect }) => {
           </h2>
           <p className="text-gray-600 mb-6">
             Keep swiping to find your perfect match! When someone likes you
-            back, they'll appear here.
+            back, they&apos;ll appear here.
           </p>
           <div className="bg-gradient-to-r from-rose-50 to-purple-50 rounded-2xl p-4">
             <p className="text-sm text-gray-700">
-              💡 <strong>Tip:</strong> Be active and swipe on profiles you're
-              interested in to increase your chances of matching!
+              💡 <strong>Tip:</strong> Be active and swipe on profiles
+              you&apos;re interested in to increase your chances of matching!
             </p>
           </div>
         </div>

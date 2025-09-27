@@ -10,17 +10,17 @@ interface NavigationProps {
 
 const Navigation: React.FC<NavigationProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: "home", icon: Home, label: "Home" },
-    { id: "chat", icon: MessageCircle, label: "Chat" },
-    { id: "profile", icon: User, label: "Profile" },
-    { id: "test", icon: TestTube, label: "Test" },
+    { id: "home", icon: Home },
+    { id: "chat", icon: MessageCircle },
+    { id: "profile", icon: User },
+    { id: "test", icon: TestTube },
   ] as const;
 
   return (
     <nav className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-50">
       <div className="bg-gray-900 rounded-full px-6 py-3 shadow-2xl">
         <div className="flex items-center space-x-8">
-          {tabs.map(({ id, icon: Icon, label }) => (
+          {tabs.map(({ id, icon: Icon }) => (
             <button
               key={id}
               onClick={() => onTabChange(id)}

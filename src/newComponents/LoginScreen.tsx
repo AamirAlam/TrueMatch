@@ -53,24 +53,37 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
       // Check if the response was successful and the verification passed
       if (response.ok && data.verifyRes && data.verifyRes.success) {
         // Extract nullifier_hash from the verification result
-        const nullifier_hash = result.finalPayload?.nullifier_hash;
+        const nullifier_hash = (result.finalPayload as Record<string, unknown>)
+          ?.nullifier_hash as string;
 
         if (nullifier_hash) {
           // Create session data with nullifier_hash
           const sessionData = {
             nullifier_hash,
-            walletAddress: result.finalPayload.address || "",
-            username: result.finalPayload.username || "User",
-            profilePictureUrl: result.finalPayload.profilePictureUrl || "",
+            walletAddress:
+              ((result.finalPayload as Record<string, unknown>)
+                ?.address as string) || "",
+            username:
+              ((result.finalPayload as Record<string, unknown>)
+                ?.username as string) || "User",
+            profilePictureUrl:
+              ((result.finalPayload as Record<string, unknown>)
+                ?.profilePictureUrl as string) || "",
           };
+
+          console.log("Session data created:", sessionData);
 
           // Save session using our custom session management
           const loginSuccess = await handleWorldCoinLogin({
             nullifier_hash,
-            address: result.finalPayload.address,
+            walletAddress: (result.finalPayload as Record<string, unknown>)
+              ?.address as string,
             user_info: {
-              username: result.finalPayload.username,
-              profilePictureUrl: result.finalPayload.profilePictureUrl,
+              username: (result.finalPayload as Record<string, unknown>)
+                ?.username as string,
+              profilePictureUrl: (
+                result.finalPayload as Record<string, unknown>
+              )?.profilePictureUrl as string,
             },
           });
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Camera, MapPin, Calendar, User, Plus, X, Mail } from "lucide-react";
+import { Camera, MapPin, Calendar, User, Plus, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useSessionManagement } from "@/hooks/useSessionManagement";
 import {

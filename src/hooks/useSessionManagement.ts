@@ -25,26 +25,13 @@ export function useSessionManagement() {
     }
   }, []);
 
-  // Fallback method to check by wallet address
-  const checkUserProfileByWallet = useCallback(
-    async (walletAddress: string) => {
-      try {
-        console.log("Checking profile for wallet:", walletAddress);
-        const profile = await firebaseService.getUserProfileByWallet(
-          walletAddress
-        );
-        return profile;
-      } catch (error) {
-        console.error("Error checking user profile by wallet:", error);
-        return null;
-      }
-    },
-    []
-  );
-
   // Handle successful WorldCoin verification
   const handleWorldCoinLogin = useCallback(
-    async (verificationResult: any) => {
+    async (verificationResult: {
+      nullifier_hash: string;
+      walletAddress?: string;
+      user_info?: Record<string, unknown>;
+    }) => {
       try {
         // Extract nullifier_hash from the verification result
         const nullifier_hash = verificationResult.nullifier_hash;
@@ -59,9 +46,19 @@ export function useSessionManagement() {
 
         const sessionData = {
           nullifier_hash,
-          walletAddress: verificationResult.address || userInfo.walletAddress,
-          username: userInfo.username || userInfo.name || "User",
-          profilePictureUrl: userInfo.profilePictureUrl || userInfo.avatar_url,
+          walletAddress:
+            verificationResult.walletAddress ||
+            ((userInfo as Record<string, unknown>)?.walletAddress as string) ||
+            "",
+          username:
+            ((userInfo as Record<string, unknown>)?.username as string) ||
+            ((userInfo as Record<string, unknown>)?.name as string) ||
+            "User",
+          profilePictureUrl:
+            ((userInfo as Record<string, unknown>)
+              ?.profilePictureUrl as string) ||
+            ((userInfo as Record<string, unknown>)?.avatar_url as string) ||
+            "",
         };
 
         const success = await login(sessionData);
@@ -110,7 +107,6 @@ export function useSessionManagement() {
     logout,
     refreshSession,
     checkUserProfile,
-    checkUserProfileByWallet,
     handleWorldCoinLogin,
   };
 }

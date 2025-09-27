@@ -47,7 +47,7 @@ const SwipeCards: React.FC = () => {
 
         const otherUsers = allProfiles
           .filter((profile) => profile.nullifierHash !== currentUserId)
-          .map((profile, index) => ({
+          .map((profile) => ({
             ...profile,
             distance: `${Math.floor(Math.random() * 10) + 1}.${Math.floor(
               Math.random() * 10
@@ -122,7 +122,7 @@ const SwipeCards: React.FC = () => {
 
         if (isMatched) {
           // Show match notification (you could add a toast here)
-          console.log("🎉 It's a match with", currentUser.name);
+          console.log("🎉 It&apos;s a match with", currentUser.name);
         }
       }
     } catch (error) {
@@ -181,8 +181,8 @@ const SwipeCards: React.FC = () => {
             Done for the day! 🎉
           </h2>
           <p className="text-gray-600 mb-6">
-            You've seen all available profiles. Come back after some time to see
-            new results!
+            You&apos;ve seen all available profiles. Come back after some time
+            to see new results!
           </p>
           <div className="bg-gradient-to-r from-rose-50 to-purple-50 rounded-2xl p-4 mb-6">
             <p className="text-sm text-gray-700">
@@ -213,8 +213,8 @@ const SwipeCards: React.FC = () => {
             Done for the day! 🎉
           </h2>
           <p className="text-gray-600 mb-6">
-            You've swiped through all available profiles. Come back after some
-            time to see new results!
+            You&apos;ve swiped through all available profiles. Come back after
+            some time to see new results!
           </p>
           <div className="bg-gradient-to-r from-rose-50 to-purple-50 rounded-2xl p-4 mb-6">
             <p className="text-sm text-gray-700">

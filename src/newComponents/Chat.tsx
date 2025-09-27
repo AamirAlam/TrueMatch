@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Heart } from "lucide-react";
+import { Plus } from "lucide-react";
 import ChatList from "./ChatList";
 import ChatRoom from "./ChatRoom";
 import StartChat from "./StartChat";
@@ -53,11 +53,6 @@ const Chat: React.FC = () => {
 
   const handleCancelStartChat = () => {
     setCurrentView("matches");
-  };
-
-  const handleBackToMatches = () => {
-    setCurrentView("matches");
-    setSelectedConversation(null);
   };
 
   if (currentView === "room" && selectedConversation) {

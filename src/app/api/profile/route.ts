@@ -5,11 +5,11 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const email = searchParams.get("email");
-    const walletAddress = searchParams.get("walletAddress");
+    const nullifierHash = searchParams.get("nullifierHash");
 
-    if (!email && !walletAddress) {
+    if (!email && !nullifierHash) {
       return NextResponse.json(
-        { error: "Email or wallet address is required" },
+        { error: "Email or nullifierHash is required" },
         { status: 400 }
       );
     }
@@ -17,8 +17,10 @@ export async function GET(req: NextRequest) {
     let profile;
     if (email) {
       profile = await firebaseService.getUserProfile(email);
-    } else if (walletAddress) {
-      profile = await firebaseService.getUserProfileByWallet(walletAddress);
+    } else if (nullifierHash) {
+      profile = await firebaseService.getUserProfileByNullifierHash(
+        nullifierHash
+      );
     }
 
     if (!profile) {
@@ -38,10 +40,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { email, walletAddress, username, profilePictureUrl, profileData } =
+    const { email, nullifierHash, username, profilePictureUrl, profileData } =
       body;
 
-    if (!email || !walletAddress || !profileData) {
+    if (!email || !nullifierHash || !profileData) {
       return NextResponse.json(
         { error: "Missing required fields" },
         { status: 400 }
@@ -50,7 +52,7 @@ export async function POST(req: NextRequest) {
 
     const success = await firebaseService.saveUserProfile(
       email,
-      walletAddress,
+      nullifierHash,
       username || "",
       profilePictureUrl || "",
       profileData as ProfileFormData
