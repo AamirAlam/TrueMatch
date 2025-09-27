@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, MapPin, Users, Star } from 'lucide-react';
+import { Heart, MapPin } from 'lucide-react';
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -86,7 +86,7 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onGetStarted, onSkipToHom
         {/* Content */}
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Let's meet new folks in your neighborhood
+            Let&apos;s meet new folks in your neighborhood
           </h1>
           <p className="text-gray-600 mb-8 leading-relaxed">
             Step into your local community and connect with people who live nearby.

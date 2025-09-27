@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Camera, Star, Heart, MessageCircle, CreditCard as Edit3 } from 'lucide-react';
+import { Settings, Edit, Camera, MapPin, Share, Star } from 'lucide-react';
 
 const Profile: React.FC = () => {
   const userStats = [
@@ -23,7 +23,7 @@ const Profile: React.FC = () => {
       {/* Header Actions */}
       <div className="flex justify-between items-center px-4 py-2">
         <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-          <Edit3 className="w-5 h-5 text-gray-600" />
+          <Edit className="w-4 h-4 text-gray-600" />
         </button>
         <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
           <Settings className="w-5 h-5 text-gray-600" />

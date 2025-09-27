@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Heart, MessageCircle, User, Home, Search } from 'lucide-react';
 import Header from './newComponents/Header';
 import SwipeCards from './newComponents/SwipeCards';
 import ChatList from './newComponents/ChatList';

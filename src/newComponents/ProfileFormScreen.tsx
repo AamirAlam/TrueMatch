@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, Calendar, User, Heart, Plus, X } from 'lucide-react';
+import { Camera, MapPin, Calendar, User, Plus, X } from 'lucide-react';
 
 interface ProfileFormScreenProps {
   onProfileComplete: () => void;
@@ -245,7 +245,7 @@ const ProfileFormScreen: React.FC<ProfileFormScreenProps> = ({ onProfileComplete
                   onChange={(e) => handleInputChange('lookingFor', e.target.value)}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 >
-                  <option value="">Select what you're looking for</option>
+                  <option value="">Select what you&apos;re looking for</option>
                   <option value="relationship">Long-term relationship</option>
                   <option value="dating">Casual dating</option>
                   <option value="friends">New friends</option>

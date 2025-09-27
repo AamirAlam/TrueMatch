@@ -12,7 +12,7 @@ export async function GET() {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     }, { status: 200 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({
       status: 'error',
       message: 'Server error',
