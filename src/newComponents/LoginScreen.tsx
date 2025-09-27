@@ -26,7 +26,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
     
     try {
       const result = await MiniKit.commandsAsync.verify({
-        action: 'login-action', // Make sure to create this in the developer portal -> incognito actions
+        action: 'login', // Make sure to create this in the developer portal -> incognito actions
         verification_level: verificationLevel,
       });
       
@@ -40,7 +40,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         },
         body: JSON.stringify({
           payload: result.finalPayload,
-          action: 'login-action',
+          action: 'login',
           signal: '', // Add the signal parameter (empty string for basic verification)
         }),
       });
