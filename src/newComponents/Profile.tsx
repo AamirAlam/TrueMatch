@@ -280,7 +280,7 @@ const Profile: React.FC = () => {
                 return (
                   <div key={index} className="relative group">
                     <img
-                      src={photoUrl}
+                      src={'http://plus.unsplash.com/premium_photo-1672322565907-932e7554b1cc?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8bW9kZWwlMjBtYWxlfGVufDB8fDB8fHww'}
                       alt={photoName}
                       className="w-full h-24 object-cover rounded-xl"
                     />
