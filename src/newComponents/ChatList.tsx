@@ -77,7 +77,7 @@ const ChatList: React.FC<ChatListProps> = ({ onChatSelect }) => {
                         nullifierHash: otherUserId,
                         username: "Unknown User",
                         profilePictureUrl:
-                          "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+                          "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg",
                         name: "Unknown User",
                         age: "",
                         bio: "",
@@ -228,7 +228,7 @@ const ChatList: React.FC<ChatListProps> = ({ onChatSelect }) => {
                   <img
                     src={
                       conversation.otherUserProfile.profilePictureUrl ||
-                      "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                      "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
                     }
                     alt={conversation.otherUserProfile.name}
                     className="w-14 h-14 rounded-full object-cover"

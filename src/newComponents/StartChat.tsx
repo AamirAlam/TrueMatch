@@ -134,7 +134,7 @@ const StartChat: React.FC<StartChatProps> = ({ onChatStarted, onCancel }) => {
                 <img
                   src={
                     user.profilePictureUrl ||
-                    "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                    "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
                   }
                   alt={user.name}
                   className="w-12 h-12 rounded-full object-cover"

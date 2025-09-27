@@ -198,7 +198,7 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
             <img
               src={
                 otherUserProfile.profilePictureUrl ||
-                "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
               }
               alt={otherUserProfile.name}
               className="w-10 h-10 rounded-full object-cover"

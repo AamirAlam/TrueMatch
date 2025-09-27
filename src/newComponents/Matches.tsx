@@ -68,7 +68,7 @@ const Matches: React.FC<MatchesProps> = ({ onChatSelect }) => {
                   nullifierHash: otherUserId,
                   username: "Unknown User",
                   profilePictureUrl:
-                    "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg",
+                    "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg",
                   name: "Unknown User",
                   age: "",
                   bio: "",
@@ -217,7 +217,7 @@ const Matches: React.FC<MatchesProps> = ({ onChatSelect }) => {
                 <img
                   src={
                     match.otherUserProfile.profilePictureUrl ||
-                    "https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg"
+                    "https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg"
                   }
                   alt={match.otherUserProfile.name}
                   className="w-full h-32 object-cover rounded-xl"
