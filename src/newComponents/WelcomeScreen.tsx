@@ -1,7 +1,6 @@
-import React from 'react';
-import { Heart, MapPin } from 'lucide-react';
-import FilecoinImageUpload from '@/components/FilecoinImageUpload';
-import { TestWLDPayment } from '@/components/TestWLDPayment';
+import React from "react";
+import { Heart, MapPin } from "lucide-react";
+import FilecoinImageUpload from "@/components/FilecoinImageUpload";
 
 interface WelcomeScreenProps {
   onGetStarted: () => void;
@@ -118,8 +117,6 @@ const WelcomeScreen: React.FC<WelcomeScreenProps> = ({
           >
             Get Started
           </button>
-
-          <TestWLDPayment />
 
           {/* Skip Button for Testing */}
           {/* <button

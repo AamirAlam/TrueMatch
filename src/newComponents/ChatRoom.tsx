@@ -5,7 +5,9 @@ import {
   firebaseService,
   ChatMessage,
   UserProfile,
+  Conversation,
 } from "@/lib/firebaseService";
+import ChatPayment from "./ChatPayment";
 
 interface ChatRoomProps {
   conversationId: string;
@@ -25,6 +27,8 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [conversation, setConversation] = useState<Conversation | null>(null);
+  const [showPayment, setShowPayment] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom when new messages arrive
@@ -35,6 +39,38 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Load conversation and check payment status
+  useEffect(() => {
+    if (!conversationId || !isAuthenticated || !session) return;
+
+    const loadConversation = async () => {
+      try {
+        // Get conversation details
+        const conversationData = await firebaseService.getOrCreateConversation(
+          session.nullifier_hash!,
+          otherUserId
+        );
+
+        setConversation(conversationData);
+
+        // Check if payment is required
+        if (!conversationData.isPaid) {
+          setShowPayment(true);
+          setIsLoading(false);
+          return;
+        }
+
+        // If paid, proceed to load messages
+        setShowPayment(false);
+      } catch (error) {
+        console.error("Error loading conversation:", error);
+        setIsLoading(false);
+      }
+    };
+
+    loadConversation();
+  }, [conversationId, isAuthenticated, session, otherUserId]);
 
   // Load messages and set up real-time listener
   useEffect(() => {
@@ -63,6 +99,18 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
       setIsLoading(false);
     }
   }, [conversationId, isAuthenticated, session]);
+
+  const handlePaymentSuccess = () => {
+    setShowPayment(false);
+    // Reload conversation to get updated payment status
+    if (conversation) {
+      setConversation({ ...conversation, isPaid: true });
+    }
+  };
+
+  const handlePaymentCancel = () => {
+    onBack();
+  };
 
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !session || isSending) return;
@@ -108,6 +156,21 @@ const ChatRoom: React.FC<ChatRoomProps> = ({
     if (days < 7) return `${days}d`;
     return timestamp.toLocaleDateString();
   };
+
+  // Show payment screen if payment is required
+  if (showPayment && conversation) {
+    return (
+      <ChatPayment
+        conversationId={conversationId}
+        otherUserProfile={{
+          name: otherUserProfile.name,
+          nullifierHash: otherUserProfile.nullifierHash,
+        }}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentCancel={handlePaymentCancel}
+      />
+    );
+  }
 
   if (isLoading) {
     return (

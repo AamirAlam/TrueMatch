@@ -59,6 +59,8 @@ export interface Conversation {
   lastMessage?: ChatMessage;
   lastMessageTime: Date;
   unreadCount: { [userId: string]: number };
+  isPaid: boolean; // Payment status for the conversation
+  paymentTimestamp?: Date; // When payment was made
   createdAt: Date;
   updatedAt: Date;
 }
@@ -253,6 +255,8 @@ class FirebaseService {
             id: docSnapshot.id,
             ...data,
             lastMessageTime: data.lastMessageTime?.toDate() || new Date(),
+            isPaid: data.isPaid || false,
+            paymentTimestamp: data.paymentTimestamp?.toDate(),
             createdAt: data.createdAt?.toDate() || new Date(),
             updatedAt: data.updatedAt?.toDate() || new Date(),
           } as Conversation;
@@ -264,6 +268,7 @@ class FirebaseService {
         participants: [user1Id, user2Id],
         lastMessageTime: serverTimestamp(),
         unreadCount: { [user1Id]: 0, [user2Id]: 0 },
+        isPaid: false, // New conversations require payment
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -278,6 +283,7 @@ class FirebaseService {
         participants: [user1Id, user2Id],
         lastMessageTime: new Date(),
         unreadCount: { [user1Id]: 0, [user2Id]: 0 },
+        isPaid: false,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -511,6 +517,8 @@ class FirebaseService {
           id: doc.id,
           ...data,
           lastMessageTime: data.lastMessageTime?.toDate() || new Date(),
+          isPaid: data.isPaid || false,
+          paymentTimestamp: data.paymentTimestamp?.toDate(),
           createdAt: data.createdAt?.toDate() || new Date(),
           updatedAt: data.updatedAt?.toDate() || new Date(),
           unreadCount,
@@ -774,6 +782,36 @@ class FirebaseService {
     } catch (error) {
       console.error("Error checking if users are matched:", error);
       return false;
+    }
+  }
+
+  /**
+   * Update conversation payment status
+   */
+  async updateConversationPaymentStatus(
+    conversationId: string,
+    isPaid: boolean
+  ): Promise<void> {
+    try {
+      const conversationRef = doc(
+        db,
+        this.conversationsCollection,
+        conversationId
+      );
+
+      const updateData: any = {
+        isPaid,
+        updatedAt: new Date(),
+      };
+
+      if (isPaid) {
+        updateData.paymentTimestamp = new Date();
+      }
+
+      await updateDoc(conversationRef, updateData);
+    } catch (error) {
+      console.error("Error updating conversation payment status:", error);
+      throw new Error("Failed to update conversation payment status");
     }
   }
 }

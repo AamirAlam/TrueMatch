@@ -41,7 +41,7 @@ function WorldCoinApp() {
     process.env.NEXT_PUBLIC_SKIP_WORLDCOIN_LOGIN === "true";
 
   // Test nullifier_hash for development
-  const TEST_NULLIFIER_HASH = "123123";
+  const TEST_NULLIFIER_HASH = "111";
   const TEST_SESSION_DATA = {
     nullifier_hash: TEST_NULLIFIER_HASH,
     walletAddress: "0x1234567890123456789012345678901234567890",
