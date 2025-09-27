@@ -40,7 +40,7 @@ export default function FilecoinImageUpload() {
     const file = event.target.files?.[0];
     if (file) {
       // Enhanced iPhone debugging
-      console.log('iPhone file selection debug:', {
+      console.log('iPhone file selection debug2:', {
         name: file.name,
         type: file.type,
         size: file.size,
@@ -96,8 +96,20 @@ export default function FilecoinImageUpload() {
       const formData = new FormData();
       formData.append('file', selectedFile);
 
-      console.log('Sending request to /api/images/upload...');
-      const response = await fetch('/api/images/upload', {
+      const apiUrl = '/api/images/upload';
+      const fullUrl = `${window.location.origin}${apiUrl}`;
+      
+      console.log('API URL details:', {
+        apiUrl,
+        fullUrl,
+        origin: window.location.origin,
+        hostname: window.location.hostname,
+        port: window.location.port,
+        protocol: window.location.protocol
+      });
+      
+      console.log('Sending request to:', fullUrl);
+      const response = await fetch(apiUrl, {
         method: 'POST',
         body: formData,
       });
