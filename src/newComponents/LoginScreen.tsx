@@ -30,25 +30,34 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         verification_level: verificationLevel,
       });
       
-      console.log(result.finalPayload);
+      console.log('World ID verification result:', result.finalPayload);
       
       // Verify the proof
       const response = await fetch('/api/verify-proof', {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({
           payload: result.finalPayload,
           action: 'login-action',
+          signal: '', // Add the signal parameter (empty string for basic verification)
         }),
       });
 
       const data = await response.json();
-      if (data.verifyRes.success) {
+      console.log('API verification response:', data);
+      
+      // Check if the response was successful and the verification passed
+      if (response.ok && data.verifyRes && data.verifyRes.success) {
         setButtonState('success');
+        console.log('Verification successful!');
         // Call onLoginSuccess after successful verification
         setTimeout(() => {
           onLoginSuccess();
         }, 1000);
       } else {
+        console.error('Verification failed:', data);
         setButtonState('failed');
         // Reset the button state after 3 seconds
         setTimeout(() => {
@@ -56,7 +65,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
         }, 2000);
       }
     } catch (error) {
-      console.error('Verification error', error);
+      console.error('Verification error:', error);
       setButtonState('failed');
       setTimeout(() => {
         setButtonState(undefined);
