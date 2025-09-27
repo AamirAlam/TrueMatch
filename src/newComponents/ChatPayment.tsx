@@ -51,7 +51,7 @@ const ChatPayment: React.FC<ChatPaymentProps> = ({
       // Send 0.001 WLD to start the conversation
       const result = await MiniKit.commandsAsync.pay({
         reference: id,
-        to: otherUserProfile.nullifierHash, // Using nullifierHash as recipient
+        to: "0x9d1599C943AaDb3c0A1964d159113dF913E08f64", // Using nullifierHash as recipient
         tokens: [
           {
             symbol: Tokens.WLD,
