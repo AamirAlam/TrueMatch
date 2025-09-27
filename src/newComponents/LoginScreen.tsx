@@ -266,9 +266,9 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
                 World App is not installed. Please install World App to
                 continue.
               </p>
-              <p className="text-xs text-yellow-600 mt-2">
+              {/* <p className="text-xs text-yellow-600 mt-2">
                 Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}, directInstalled={String(directMiniKitInstalled)}
-              </p>
+              </p> */}
             </div>
           )}
           
@@ -277,14 +277,14 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
               <p className="text-sm text-blue-800">
                 Initializing World ID...
               </p>
-              <p className="text-xs text-blue-600 mt-2">
+              {/* <p className="text-xs text-blue-600 mt-2">
                 Debug: miniKitReady={String(miniKitReady)}, isInstalled={String(isInstalled)}, directInstalled={String(directMiniKitInstalled)}
-              </p>
+              </p> */}
             </div>
           )}
           
           {/* Debug info always visible */}
-          <div className="text-center p-2 bg-gray-50 rounded-xl border border-gray-200 mt-2">
+          {/* <div className="text-center p-2 bg-gray-50 rounded-xl border border-gray-200 mt-2">
             <p className="text-xs text-gray-600">
               Hook: isInstalled={String(isInstalled)} | Direct: directInstalled={String(directMiniKitInstalled)}
             </p>
@@ -294,7 +294,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onLoginSuccess }) => {
             <p className="text-xs text-gray-600">
               UserAgent: {navigator.userAgent.includes('WorldApp') ? 'WorldApp detected' : 'Not WorldApp'}
             </p>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
